@@ -22,40 +22,50 @@ export default async function LesionesPage() {
   }, {});
 
   return (
-    <div className="py-12">
+    <div className="py-14">
       <div className="page-container">
-        <div className="mb-10 max-w-2xl">
-          <h1 className="text-4xl font-extrabold text-white mb-3">Lesiones</h1>
-          <p className="text-gray-400">
+
+        <div className="mb-12">
+          <p className="text-xs text-[#d4a017] uppercase tracking-widest font-semibold mb-2">Guía de lesiones</p>
+          <h1 className="font-display text-5xl lg:text-7xl text-white uppercase tracking-wide mb-4">
+            Lesiones
+          </h1>
+          <p className="text-[#888888] max-w-xl leading-relaxed">
             Consulta qué artes marciales son compatibles con tu lesión y cuáles están contraindicadas.
           </p>
         </div>
 
-        <div className="space-y-10">
+        <div className="space-y-12">
           {Object.entries(porZona).map(([zona, items]) => (
             <div key={zona}>
-              <h2 className="text-lg font-semibold text-white capitalize mb-4 flex items-center gap-2">
-                <span className="h-px flex-1 bg-gray-800" />
-                {zona}
-                <span className="h-px flex-1 bg-gray-800" />
-              </h2>
+              {/* Zone header */}
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="font-display text-2xl text-[#d4a017] uppercase tracking-widest whitespace-nowrap">
+                  {zona}
+                </h2>
+                <div className="flex-1 h-px bg-[#2a2a2a]" />
+                <span className="text-xs text-[#888888] uppercase tracking-widest">{items.length}</span>
+              </div>
+
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {items.map((l) => (
                   <Link
                     key={l.id}
                     href={`/lesiones/${l.slug}`}
-                    className="card group flex flex-col gap-2 hover:border-gray-700"
+                    className="card group flex flex-col gap-2"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-white leading-snug group-hover:text-brand-400 transition">
+                      <h3 className="text-sm font-semibold text-[#f0f0f0] leading-snug group-hover:text-[#d4a017] transition-colors">
                         {l.nombre}
                       </h3>
                       <span className={`${severidadColor[l.severidad]} shrink-0`}>{l.severidad}</span>
                     </div>
                     {l.descripcion && (
-                      <p className="text-xs text-gray-400 line-clamp-2">{l.descripcion}</p>
+                      <p className="text-xs text-[#888888] line-clamp-2 leading-relaxed">{l.descripcion}</p>
                     )}
-                    <p className="text-xs text-brand-500 mt-auto">Ver artes marciales compatibles →</p>
+                    <p className="text-xs text-[#c41e1e] mt-auto pt-1 font-semibold uppercase tracking-wider">
+                      Ver compatibilidades →
+                    </p>
                   </Link>
                 ))}
               </div>

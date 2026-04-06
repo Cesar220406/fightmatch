@@ -23,7 +23,6 @@ export default function BuscadorHero({ lesiones }: { lesiones: Lesion[] }) {
     router.push(`/gimnasios?${params.toString()}`);
   }
 
-  // Agrupar lesiones por zona corporal
   const porZona = lesiones.reduce<Record<string, Lesion[]>>((acc, l) => {
     const zona = l.zona_corporal ?? 'Otra';
     if (!acc[zona]) acc[zona] = [];
@@ -35,7 +34,7 @@ export default function BuscadorHero({ lesiones }: { lesiones: Lesion[] }) {
     <form onSubmit={buscar} className="space-y-6">
       {/* Ciudad */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1.5">
+        <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-2">
           ¿En qué ciudad estás?
         </label>
         <input
@@ -49,14 +48,15 @@ export default function BuscadorHero({ lesiones }: { lesiones: Lesion[] }) {
 
       {/* Lesiones */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-3">
-          ¿Tienes alguna lesión? <span className="text-gray-500 font-normal">(opcional — selecciona todas las que apliquen)</span>
+        <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-3">
+          ¿Tienes alguna lesión?{' '}
+          <span className="text-[#444444] font-normal normal-case tracking-normal">(opcional)</span>
         </label>
 
-        <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
+        <div className="space-y-4 max-h-64 overflow-y-auto pr-1">
           {Object.entries(porZona).map(([zona, items]) => (
             <div key={zona}>
-              <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">{zona}</p>
+              <p className="text-xs text-[#d4a017] uppercase tracking-widest mb-2 font-semibold">{zona}</p>
               <div className="flex flex-wrap gap-2">
                 {items.map((l) => {
                   const activa = seleccionadas.includes(l.id);
@@ -65,11 +65,12 @@ export default function BuscadorHero({ lesiones }: { lesiones: Lesion[] }) {
                       key={l.id}
                       type="button"
                       onClick={() => toggleLesion(l.id)}
-                      className={`rounded-full px-3 py-1.5 text-sm font-medium transition border ${
+                      className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all border ${
                         activa
-                          ? 'bg-brand-600 border-brand-500 text-white'
-                          : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
+                          ? 'bg-[#c41e1e] border-[#c41e1e] text-white'
+                          : 'bg-transparent border-[#2a2a2a] text-[#888888] hover:border-[#d4a017] hover:text-[#d4a017]'
                       }`}
+                      style={{ borderRadius: 0 }}
                     >
                       {l.nombre}
                     </button>
@@ -82,12 +83,12 @@ export default function BuscadorHero({ lesiones }: { lesiones: Lesion[] }) {
       </div>
 
       {seleccionadas.length > 0 && (
-        <p className="text-xs text-brand-400">
-          {seleccionadas.length} lesión{seleccionadas.length > 1 ? 'es' : ''} seleccionada{seleccionadas.length > 1 ? 's' : ''} — te mostraremos gimnasios con artes compatibles.
+        <p className="text-xs text-[#d4a017] font-medium">
+          ✓ {seleccionadas.length} lesión{seleccionadas.length > 1 ? 'es' : ''} seleccionada{seleccionadas.length > 1 ? 's' : ''}
         </p>
       )}
 
-      <button type="submit" className="btn-primary w-full py-3 text-base">
+      <button type="submit" className="btn-primary w-full py-3 text-sm">
         Buscar gimnasios
       </button>
     </form>

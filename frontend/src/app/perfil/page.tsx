@@ -58,8 +58,11 @@ export default function PerfilPage() {
 
   if (!user) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-gray-500">
-        Cargando perfil...
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center">
+          <p className="font-display text-4xl text-[#2a2a2a] uppercase mb-2">Cargando</p>
+          <p className="text-xs text-[#888888] uppercase tracking-widest">Verificando sesión...</p>
+        </div>
       </div>
     );
   }
@@ -76,22 +79,28 @@ export default function PerfilPage() {
   };
 
   return (
-    <div className="py-12">
+    <div className="py-14">
       <div className="page-container max-w-3xl">
-        <h1 className="text-3xl font-extrabold text-white mb-8">Mi Perfil</h1>
+
+        <div className="mb-10">
+          <p className="text-xs text-[#d4a017] uppercase tracking-widest font-semibold mb-2">Cuenta</p>
+          <h1 className="font-display text-5xl text-white uppercase tracking-wide">Mi Perfil</h1>
+        </div>
 
         {/* Info usuario */}
         <div className="card mb-8">
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-brand-800 flex items-center justify-center text-2xl font-bold text-white">
+          <div className="flex items-center gap-5">
+            <div className="h-16 w-16 bg-[#c41e1e] flex items-center justify-center text-2xl font-bold text-white shrink-0">
               {user.nombre[0].toUpperCase()}
             </div>
-            <div>
-              <p className="text-lg font-semibold text-white">{user.nombre} {user.apellidos}</p>
-              <p className="text-sm text-gray-400">{user.email}</p>
-              <span className="badge-gray mt-1">{rolLabel[user.rol] ?? user.rol}</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-display text-2xl text-white uppercase tracking-wide">
+                {user.nombre} {user.apellidos}
+              </p>
+              <p className="text-sm text-[#888888] mt-0.5">{user.email}</p>
+              <span className="badge-gold mt-2 inline-block">{rolLabel[user.rol] ?? user.rol}</span>
             </div>
-            <button onClick={cerrarSesion} className="ml-auto btn-secondary text-xs py-2 px-3">
+            <button onClick={cerrarSesion} className="btn-secondary text-xs py-2 px-4 shrink-0">
               Cerrar sesión
             </button>
           </div>
@@ -99,15 +108,15 @@ export default function PerfilPage() {
 
         {/* Lesiones */}
         <div className="card">
-          <h2 className="text-xl font-bold text-white mb-2">Mis lesiones</h2>
-          <p className="text-sm text-gray-400 mb-6">
+          <h2 className="font-display text-2xl text-white uppercase tracking-wide mb-2">Mis lesiones</h2>
+          <p className="text-sm text-[#888888] mb-8 leading-relaxed">
             Selecciona las lesiones que tienes actualmente para recibir recomendaciones personalizadas.
           </p>
 
-          <div className="space-y-5">
+          <div className="space-y-6">
             {Object.entries(porZona).map(([zona, items]) => (
               <div key={zona}>
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">{zona}</p>
+                <p className="text-xs text-[#d4a017] uppercase tracking-widest font-semibold mb-3">{zona}</p>
                 <div className="flex flex-wrap gap-2">
                   {items.map((l) => {
                     const activa = seleccionadas.includes(l.id);
@@ -115,11 +124,12 @@ export default function PerfilPage() {
                       <button
                         key={l.id}
                         onClick={() => toggleLesion(l.id)}
-                        className={`rounded-full px-3 py-1.5 text-sm font-medium transition border ${
+                        className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all border ${
                           activa
-                            ? 'bg-brand-600 border-brand-500 text-white'
-                            : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
+                            ? 'bg-[#c41e1e] border-[#c41e1e] text-white'
+                            : 'bg-transparent border-[#2a2a2a] text-[#888888] hover:border-[#d4a017] hover:text-[#d4a017]'
                         }`}
+                        style={{ borderRadius: 0 }}
                       >
                         {l.nombre}
                       </button>
@@ -131,20 +141,17 @@ export default function PerfilPage() {
           </div>
 
           {mensaje && (
-            <p className={`mt-4 text-sm ${mensaje.includes('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
+            <p className={`mt-5 text-sm font-medium ${mensaje.includes('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
               {mensaje}
             </p>
           )}
 
-          <div className="flex items-center gap-4 mt-6 pt-4 border-t border-gray-800">
+          <div className="flex items-center gap-4 mt-8 pt-5 border-t border-[#2a2a2a]">
             <button onClick={guardarLesiones} disabled={guardando} className="btn-primary">
               {guardando ? 'Guardando...' : 'Guardar lesiones'}
             </button>
             {seleccionadas.length > 0 && (
-              <a
-                href={`/gimnasios?lesion=${seleccionadas.join(',')}`}
-                className="btn-secondary"
-              >
+              <a href={`/gimnasios?lesion=${seleccionadas.join(',')}`} className="btn-secondary">
                 Buscar gimnasios compatibles
               </a>
             )}

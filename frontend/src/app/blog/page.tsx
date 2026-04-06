@@ -26,35 +26,41 @@ export default async function BlogPage({
   const posts = await api.get<Post[]>(`/posts?${qs.toString()}`).catch(() => [] as Post[]);
 
   return (
-    <div className="py-12">
+    <div className="py-14">
       <div className="page-container">
-        <div className="mb-10 max-w-2xl">
-          <h1 className="text-4xl font-extrabold text-white mb-3">Blog</h1>
-          <p className="text-gray-400">
+
+        <div className="mb-12">
+          <p className="text-xs text-[#d4a017] uppercase tracking-widest font-semibold mb-2">Contenido</p>
+          <h1 className="font-display text-5xl lg:text-7xl text-white uppercase tracking-wide mb-4">
+            Blog
+          </h1>
+          <p className="text-[#888888] max-w-xl leading-relaxed">
             Consejos, guías y novedades sobre artes marciales, lesiones deportivas y entrenamiento adaptado.
           </p>
         </div>
 
         {posts.length === 0 ? (
-          <p className="text-gray-500 text-center py-20">No hay artículos publicados todavía.</p>
+          <p className="text-[#888888] text-center py-20 text-sm uppercase tracking-widest">
+            No hay artículos publicados todavía.
+          </p>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((post) => (
               <Link
                 key={post.id}
                 href={`/blog/${post.slug}`}
-                className="card group flex flex-col gap-4 hover:shadow-lg hover:shadow-brand-900/20"
+                className="card group flex flex-col gap-4"
               >
                 {/* Imagen */}
-                <div className="aspect-video overflow-hidden rounded-lg bg-gray-800">
+                <div className="aspect-video overflow-hidden bg-[#111111]">
                   {post.imagen_portada ? (
                     <img
                       src={post.imagen_portada}
                       alt={post.titulo}
-                      className="h-full w-full object-cover transition group-hover:scale-105"
+                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-4xl text-gray-600">📝</div>
+                    <div className="flex h-full items-center justify-center text-4xl text-[#333333]">📝</div>
                   )}
                 </div>
 
@@ -68,17 +74,17 @@ export default async function BlogPage({
                 )}
 
                 {/* Título */}
-                <h2 className="font-semibold text-white leading-snug group-hover:text-brand-400 transition">
+                <h2 className="font-semibold text-[#f0f0f0] leading-snug group-hover:text-[#d4a017] transition-colors flex-1">
                   {post.titulo}
                 </h2>
 
                 {post.resumen && (
-                  <p className="text-sm text-gray-400 line-clamp-2">{post.resumen}</p>
+                  <p className="text-sm text-[#888888] line-clamp-2 leading-relaxed">{post.resumen}</p>
                 )}
 
                 {/* Meta */}
-                <div className="mt-auto flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-800">
-                  <span>{post.autor_nombre}</span>
+                <div className="flex items-center justify-between text-xs text-[#666666] pt-3 border-t border-[#2a2a2a]">
+                  <span className="text-[#888888]">{post.autor_nombre}</span>
                   <span>{formatFecha(post.publicado_en)}</span>
                 </div>
               </Link>

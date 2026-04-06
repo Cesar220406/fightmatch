@@ -21,11 +21,10 @@ export default function Nav() {
 
   useEffect(() => {
     setUser(getUser());
-    // Escuchar cambios de storage (login/logout en otra pestaña)
     const handler = () => setUser(getUser());
     window.addEventListener('storage', handler);
     return () => window.removeEventListener('storage', handler);
-  }, [pathname]); // re-evalúa al cambiar de página
+  }, [pathname]);
 
   function cerrarSesion() {
     logout();
@@ -34,21 +33,24 @@ export default function Nav() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-800 bg-gray-950/90 backdrop-blur">
+    <header className="sticky top-0 z-50 bg-[#0a0a0a] border-b border-[#d4a017]/20">
       <div className="page-container flex h-16 items-center justify-between">
+
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-white text-xl">
-          <span className="text-brand-500">Fight</span>Match
+        <Link href="/" className="flex items-center gap-0 font-display text-2xl tracking-widest text-white uppercase">
+          <span className="text-[#c41e1e]">Fight</span>Match
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-8">
           {links.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
-              className={`text-sm font-medium transition ${
-                pathname.startsWith(href) ? 'text-white' : 'text-gray-400 hover:text-white'
+              className={`text-xs font-semibold uppercase tracking-widest transition-colors ${
+                pathname.startsWith(href)
+                  ? 'text-[#d4a017]'
+                  : 'text-[#888888] hover:text-[#d4a017]'
               }`}
             >
               {label}
@@ -57,8 +59,10 @@ export default function Nav() {
           {(user?.rol === 'admin' || user?.rol === 'editor') && (
             <Link
               href="/admin"
-              className={`text-sm font-medium transition ${
-                pathname.startsWith('/admin') ? 'text-brand-400' : 'text-gray-500 hover:text-brand-400'
+              className={`text-xs font-semibold uppercase tracking-widest transition-colors ${
+                pathname.startsWith('/admin')
+                  ? 'text-[#d4a017]'
+                  : 'text-[#888888] hover:text-[#d4a017]'
               }`}
             >
               Admin
@@ -70,11 +74,11 @@ export default function Nav() {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
-              <Link href="/perfil" className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition">
-                <div className="h-7 w-7 rounded-full bg-brand-800 flex items-center justify-center text-xs font-bold text-white">
+              <Link href="/perfil" className="flex items-center gap-2 text-sm text-[#888888] hover:text-[#d4a017] transition-colors">
+                <div className="h-7 w-7 bg-[#c41e1e] flex items-center justify-center text-xs font-bold text-white">
                   {user.nombre[0].toUpperCase()}
                 </div>
-                <span>{user.nombre}</span>
+                <span className="text-xs font-medium uppercase tracking-wider">{user.nombre}</span>
               </Link>
               <button onClick={cerrarSesion} className="btn-secondary py-1.5 px-3 text-xs">
                 Salir
@@ -82,14 +86,18 @@ export default function Nav() {
             </div>
           ) : (
             <>
-              <Link href="/auth/login" className="btn-secondary py-2 px-4 text-xs">Entrar</Link>
+              <Link href="/auth/login" className="btn-ghost text-xs uppercase tracking-widest">Entrar</Link>
               <Link href="/auth/registro" className="btn-primary py-2 px-4 text-xs">Registrarse</Link>
             </>
           )}
         </div>
 
         {/* Mobile hamburger */}
-        <button className="md:hidden text-gray-400 hover:text-white" onClick={() => setOpen(!open)} aria-label="Menú">
+        <button
+          className="md:hidden text-[#888888] hover:text-[#d4a017] transition-colors"
+          onClick={() => setOpen(!open)}
+          aria-label="Menú"
+        >
           {open ? (
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -104,29 +112,61 @@ export default function Nav() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-gray-800 bg-gray-950 px-4 py-4 space-y-3">
+        <div className="md:hidden border-t border-[#2a2a2a] bg-[#0a0a0a] px-4 py-5 space-y-4">
           {links.map(({ href, label }) => (
-            <Link key={href} href={href} onClick={() => setOpen(false)} className="block text-sm font-medium text-gray-300 hover:text-white">
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+              className={`block text-xs font-semibold uppercase tracking-widest transition-colors ${
+                pathname.startsWith(href) ? 'text-[#d4a017]' : 'text-[#888888] hover:text-[#d4a017]'
+              }`}
+            >
               {label}
             </Link>
           ))}
           {(user?.rol === 'admin' || user?.rol === 'editor') && (
-            <Link href="/admin" onClick={() => setOpen(false)} className="block text-sm text-brand-400">Admin</Link>
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="block text-xs font-semibold uppercase tracking-widest text-[#d4a017]"
+            >
+              Admin
+            </Link>
           )}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-3 border-t border-[#2a2a2a]">
             {user ? (
               <>
-                <Link href="/perfil" className="btn-secondary py-2 px-4 text-xs flex-1 text-center" onClick={() => setOpen(false)}>
+                <Link
+                  href="/perfil"
+                  className="btn-secondary py-2 px-4 text-xs flex-1 text-center"
+                  onClick={() => setOpen(false)}
+                >
                   Mi perfil
                 </Link>
-                <button onClick={() => { cerrarSesion(); setOpen(false); }} className="btn-secondary py-2 px-4 text-xs flex-1">
+                <button
+                  onClick={() => { cerrarSesion(); setOpen(false); }}
+                  className="btn-secondary py-2 px-4 text-xs flex-1"
+                >
                   Salir
                 </button>
               </>
             ) : (
               <>
-                <Link href="/auth/login" className="btn-secondary py-2 px-4 text-xs flex-1 text-center" onClick={() => setOpen(false)}>Entrar</Link>
-                <Link href="/auth/registro" className="btn-primary py-2 px-4 text-xs flex-1 text-center" onClick={() => setOpen(false)}>Registrarse</Link>
+                <Link
+                  href="/auth/login"
+                  className="btn-ghost py-2 px-4 text-xs flex-1 text-center"
+                  onClick={() => setOpen(false)}
+                >
+                  Entrar
+                </Link>
+                <Link
+                  href="/auth/registro"
+                  className="btn-primary py-2 px-4 text-xs flex-1 text-center"
+                  onClick={() => setOpen(false)}
+                >
+                  Registrarse
+                </Link>
               </>
             )}
           </div>

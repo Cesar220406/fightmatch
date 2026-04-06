@@ -18,57 +18,90 @@ export default async function Home() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-gray-800 bg-gray-950">
+      {/* ── Hero ────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-[#0a0a0a]" style={{ borderBottom: '1px solid #2a2a2a' }}>
+        {/* Red glow */}
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage:
-              'radial-gradient(ellipse at 60% 50%, #c11313 0%, transparent 65%)',
+            background: 'radial-gradient(ellipse at 70% 40%, rgba(196,30,30,0.12) 0%, transparent 60%)',
           }}
         />
-        <div className="page-container relative py-20 lg:py-28">
+        {/* Noise texture overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          }}
+        />
+
+        <div className="page-container relative py-20 lg:py-32">
           <div className="grid lg:grid-cols-2 gap-16 items-start">
-            {/* Texto */}
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-brand-700 bg-brand-950/50 px-4 py-1.5 text-xs font-medium text-brand-300">
+
+            {/* Left: Copy */}
+            <div className="space-y-8">
+              <div
+                className="inline-flex items-center gap-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#d4a017]"
+                style={{ border: '1px solid rgba(212,160,23,0.35)' }}
+              >
+                <span className="h-1.5 w-1.5 bg-[#c41e1e] inline-block" />
                 Plataforma para deportistas con lesiones
               </div>
-              <h1 className="text-4xl lg:text-6xl font-extrabold text-white leading-tight">
-                Entrena sin{' '}
-                <span className="text-brand-500">arriesgarte</span>
+
+              {/* Big Bebas title */}
+              <h1 className="font-display text-7xl lg:text-9xl text-[#d4a017] leading-none uppercase tracking-wide">
+                Entrena<br />
+                <span className="text-white">Sin</span>{' '}
+                <span className="text-[#c41e1e]">Riesgo</span>
               </h1>
-              <p className="text-lg text-gray-400 max-w-md">
+
+              <p className="text-base text-[#888888] max-w-md leading-relaxed">
                 Encuentra el arte marcial y el gimnasio perfectos para ti,
-                teniendo en cuenta tus <strong className="text-gray-200">lesiones</strong> y tu{' '}
-                <strong className="text-gray-200">ubicación</strong>.
+                teniendo en cuenta tus <span className="text-[#f0f0f0] font-medium">lesiones</span> y tu{' '}
+                <span className="text-[#f0f0f0] font-medium">ubicación</span>.
               </p>
 
-              <div className="flex flex-wrap gap-6 pt-2 text-sm text-gray-400">
-                <div className="flex items-center gap-2">
-                  <span className="text-brand-500 font-bold text-lg">{artes.length}</span> artes marciales
+              {/* Stats */}
+              <div className="flex flex-wrap gap-10 pt-2">
+                <div>
+                  <p className="stat-number">{artes.length}</p>
+                  <p className="text-xs text-[#888888] uppercase tracking-widest mt-1">Artes marciales</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-brand-500 font-bold text-lg">{lesiones.length}</span> lesiones catalogadas
+                <div>
+                  <p className="stat-number">{lesiones.length}</p>
+                  <p className="text-xs text-[#888888] uppercase tracking-widest mt-1">Lesiones catalogadas</p>
                 </div>
               </div>
             </div>
 
-            {/* Buscador */}
-            <div className="card border-gray-700 shadow-2xl shadow-black/50">
-              <h2 className="text-lg font-bold text-white mb-5">Encuentra tu gimnasio</h2>
+            {/* Right: Buscador */}
+            <div className="card-gold shadow-2xl shadow-black/70">
+              <h2 className="font-display text-2xl text-white uppercase tracking-widest mb-6">
+                Encuentra tu gimnasio
+              </h2>
               <BuscadorHero lesiones={lesiones} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Artes marciales destacadas */}
+      {/* ── Diagonal divider ────────────────────────────── */}
+      <div className="slash-divider" />
+
+      {/* ── Artes Marciales destacadas ──────────────────── */}
       <section className="py-16">
         <div className="page-container">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="section-title">Artes Marciales</h2>
-            <a href="/artes-marciales" className="text-sm text-brand-400 hover:text-brand-300 transition">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <p className="text-xs text-[#d4a017] uppercase tracking-widest font-semibold mb-2">Disciplinas</p>
+              <h2 className="font-display text-4xl lg:text-5xl text-white uppercase tracking-wide">
+                Artes Marciales
+              </h2>
+            </div>
+            <a
+              href="/artes-marciales"
+              className="text-xs font-semibold uppercase tracking-widest text-[#888888] hover:text-[#d4a017] transition-colors"
+            >
               Ver todas →
             </a>
           </div>
@@ -80,11 +113,17 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Cómo funciona */}
-      <section className="py-16 border-t border-gray-800">
+      {/* ── Cómo funciona ───────────────────────────────── */}
+      <section className="py-20" style={{ borderTop: '1px solid #2a2a2a' }}>
         <div className="page-container">
-          <h2 className="section-title text-center mb-12">¿Cómo funciona?</h2>
-          <div className="grid sm:grid-cols-3 gap-8">
+          <div className="text-center mb-14">
+            <p className="text-xs text-[#d4a017] uppercase tracking-widest font-semibold mb-3">Proceso</p>
+            <h2 className="font-display text-4xl lg:text-6xl text-white uppercase tracking-wide">
+              ¿Cómo funciona?
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-10">
             {[
               {
                 step: '01',
@@ -102,12 +141,10 @@ export default async function Home() {
                 desc: 'Elige entre los gimnasios cercanos que ofrecen las artes marciales aptas para ti.',
               },
             ].map(({ step, title, desc }) => (
-              <div key={step} className="text-center space-y-3">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-900/50 text-brand-400 font-mono text-sm font-bold ring-1 ring-brand-700">
-                  {step}
-                </div>
-                <h3 className="font-semibold text-white">{title}</h3>
-                <p className="text-sm text-gray-400">{desc}</p>
+              <div key={step} className="relative pl-6" style={{ borderLeft: '3px solid #c41e1e' }}>
+                <p className="font-display text-6xl text-[#d4a017] leading-none mb-3">{step}</p>
+                <h3 className="font-semibold text-white text-lg mb-2">{title}</h3>
+                <p className="text-sm text-[#888888] leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>

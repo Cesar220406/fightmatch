@@ -27,35 +27,38 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
   if (!g) notFound();
 
   return (
-    <div className="py-12">
+    <div className="py-14">
       <div className="page-container max-w-5xl">
+
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-6 flex items-center gap-2">
-          <Link href="/gimnasios" className="hover:text-white transition">Gimnasios</Link>
-          <span>/</span>
-          <span className="text-gray-300">{g.nombre}</span>
+        <nav className="text-xs text-[#888888] mb-8 flex items-center gap-2 uppercase tracking-widest font-semibold">
+          <Link href="/gimnasios" className="hover:text-[#d4a017] transition-colors">Gimnasios</Link>
+          <span className="text-[#2a2a2a]">/</span>
+          <span className="text-[#f0f0f0] truncate max-w-xs">{g.nombre}</span>
         </nav>
 
         {/* Hero imagen */}
-        <div className="aspect-[3/1] w-full overflow-hidden rounded-2xl bg-gray-800 mb-8">
+        <div className="aspect-[3/1] w-full overflow-hidden bg-[#111111] mb-10" style={{ borderLeft: '4px solid #c41e1e' }}>
           {g.imagen_url ? (
             <img src={g.imagen_url} alt={g.nombre} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full items-center justify-center text-7xl text-gray-600">🏋️</div>
+            <div className="flex h-full items-center justify-center text-7xl text-[#333333]">🏋️</div>
           )}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-10">
           {/* Info principal */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             <div>
-              <div className="flex items-start gap-3 flex-wrap">
-                <h1 className="text-3xl font-extrabold text-white">{g.nombre}</h1>
-                {g.verificado && <span className="badge-green mt-1">Verificado</span>}
+              <div className="flex items-start gap-3 flex-wrap mb-2">
+                <h1 className="font-display text-4xl lg:text-5xl text-white uppercase tracking-wide leading-none">
+                  {g.nombre}
+                </h1>
+                {g.verificado && <span className="badge-green mt-2">Verificado</span>}
               </div>
               {g.ciudad && (
-                <p className="mt-2 text-gray-400 flex items-center gap-1.5">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <p className="text-sm text-[#888888] flex items-center gap-1.5 mt-2">
+                  <svg className="h-4 w-4 text-[#d4a017]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -67,18 +70,18 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
 
             {g.descripcion && (
               <div>
-                <h2 className="text-lg font-semibold text-white mb-2">Sobre el gimnasio</h2>
-                <p className="text-gray-400 leading-relaxed">{g.descripcion}</p>
+                <h2 className="font-display text-xl text-white uppercase tracking-wide mb-3">Sobre el gimnasio</h2>
+                <p className="text-[#888888] leading-relaxed">{g.descripcion}</p>
               </div>
             )}
 
             {/* Artes marciales */}
             {g.artes && g.artes.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold text-white mb-3">Artes Marciales</h2>
+                <h2 className="font-display text-xl text-white uppercase tracking-wide mb-4">Artes Marciales</h2>
                 <div className="flex flex-wrap gap-2">
                   {g.artes.map((a) => (
-                    <span key={a} className="badge-gray text-sm px-3 py-1">{a}</span>
+                    <span key={a} className="badge-gold text-sm px-4 py-1.5">{a}</span>
                   ))}
                 </div>
               </div>
@@ -87,14 +90,14 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
             {/* Horarios */}
             {g.horario && (
               <div>
-                <h2 className="text-lg font-semibold text-white mb-3">Horarios</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <h2 className="font-display text-xl text-white uppercase tracking-wide mb-4">Horarios</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {diasSemana.map((dia) => {
                     const horario = (g.horario as Record<string, string>)?.[dia];
                     return (
-                      <div key={dia} className="rounded-lg border border-gray-800 bg-gray-900/50 px-3 py-2">
-                        <p className="text-xs text-gray-500 font-medium">{diasLabel[dia]}</p>
-                        <p className="text-sm text-white">{horario ?? 'Cerrado'}</p>
+                      <div key={dia} className="border border-[#2a2a2a] bg-[#111111] px-3 py-2.5">
+                        <p className="text-xs text-[#d4a017] font-semibold uppercase tracking-wider">{diasLabel[dia]}</p>
+                        <p className="text-sm text-[#f0f0f0] mt-0.5">{horario ?? 'Cerrado'}</p>
                       </div>
                     );
                   })}
@@ -104,19 +107,22 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-4">
-            <div className="card sticky top-20">
+          <div>
+            <div className="card-gold sticky top-20">
               {g.precio_desde && (
-                <div className="mb-4 pb-4 border-b border-gray-800">
-                  <p className="text-xs text-gray-500">Precio desde</p>
-                  <p className="text-2xl font-bold text-white">{g.precio_desde}€<span className="text-sm text-gray-400 font-normal">/mes</span></p>
+                <div className="mb-5 pb-5 border-b border-[#2a2a2a]">
+                  <p className="text-xs text-[#888888] uppercase tracking-widest mb-1">Precio desde</p>
+                  <p className="font-display text-4xl text-[#d4a017]">
+                    {g.precio_desde}€
+                    <span className="text-base text-[#888888] font-sans font-normal">/mes</span>
+                  </p>
                 </div>
               )}
 
-              <div className="space-y-3 text-sm">
+              <div className="space-y-3 text-sm mb-5">
                 {g.telefono && (
-                  <a href={`tel:${g.telefono}`} className="flex items-center gap-2 text-gray-300 hover:text-white transition">
-                    <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <a href={`tel:${g.telefono}`} className="flex items-center gap-2 text-[#888888] hover:text-[#f0f0f0] transition-colors">
+                    <svg className="h-4 w-4 text-[#d4a017]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
@@ -124,8 +130,8 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
                   </a>
                 )}
                 {g.email_contacto && (
-                  <a href={`mailto:${g.email_contacto}`} className="flex items-center gap-2 text-gray-300 hover:text-white transition">
-                    <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <a href={`mailto:${g.email_contacto}`} className="flex items-center gap-2 text-[#888888] hover:text-[#f0f0f0] transition-colors">
+                    <svg className="h-4 w-4 text-[#d4a017]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
@@ -134,8 +140,8 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
                 )}
                 {g.sitio_web && (
                   <a href={g.sitio_web} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-gray-300 hover:text-white transition">
-                    <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    className="flex items-center gap-2 text-[#888888] hover:text-[#f0f0f0] transition-colors">
+                    <svg className="h-4 w-4 text-[#d4a017]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                     </svg>
@@ -144,7 +150,7 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
                 )}
               </div>
 
-              <button className="btn-primary w-full mt-5">Contactar</button>
+              <button className="btn-primary w-full">Contactar</button>
             </div>
           </div>
         </div>

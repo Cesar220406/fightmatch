@@ -14,44 +14,55 @@ export default function CompatibilidadTabla({
   modo: 'por-arte' | 'por-lesion';
 }) {
   if (!items || items.length === 0) {
-    return <p className="text-sm text-gray-500">Sin datos de compatibilidad todavía.</p>;
+    return (
+      <p className="text-sm text-[#888888] uppercase tracking-widest">
+        Sin datos de compatibilidad todavía.
+      </p>
+    );
   }
 
   const compatibles   = items.filter((i) => i.compatible);
   const incompatibles = items.filter((i) => !i.compatible);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {compatibles.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-emerald-400 mb-3">
+          <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-widest mb-4">
             Compatibles ({compatibles.length})
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-gray-500 border-b border-gray-800">
-                  <th className="text-left pb-2 font-medium">
+                <tr className="text-xs text-[#888888] uppercase tracking-widest" style={{ borderBottom: '1px solid #2a2a2a' }}>
+                  <th className="text-left pb-3 font-semibold">
                     {modo === 'por-arte' ? 'Lesión' : 'Arte marcial'}
                   </th>
-                  <th className="text-left pb-2 font-medium">Nivel máx.</th>
-                  <th className="text-left pb-2 font-medium">Notas</th>
+                  <th className="text-left pb-3 font-semibold">Nivel máx.</th>
+                  <th className="text-left pb-3 font-semibold">Notas</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody>
                 {compatibles.map((item, i) => (
-                  <tr key={i} className="py-2">
-                    <td className="py-2 pr-4 font-medium text-white">
+                  <tr
+                    key={i}
+                    className="text-sm"
+                    style={{
+                      borderBottom: '1px solid #1a1a1a',
+                      backgroundColor: i % 2 === 0 ? 'transparent' : '#0d0d0d',
+                    }}
+                  >
+                    <td className="py-3 pr-4 font-semibold text-[#f0f0f0]">
                       {modo === 'por-arte' ? item.lesion : item.arte}
                     </td>
-                    <td className="py-2 pr-4">
+                    <td className="py-3 pr-4">
                       {item.nivel ? (
                         <span className="badge-yellow">{nivelLabel[item.nivel] ?? item.nivel}</span>
                       ) : (
-                        <span className="text-gray-600">—</span>
+                        <span className="text-[#444444]">—</span>
                       )}
                     </td>
-                    <td className="py-2 text-gray-400 text-xs max-w-xs">
+                    <td className="py-3 text-[#888888] text-xs max-w-xs">
                       {item.notas ?? '—'}
                     </td>
                   </tr>
@@ -64,26 +75,32 @@ export default function CompatibilidadTabla({
 
       {incompatibles.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-red-400 mb-3">
+          <h3 className="text-xs font-semibold text-[#c41e1e] uppercase tracking-widest mb-4">
             Contraindicados ({incompatibles.length})
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-gray-500 border-b border-gray-800">
-                  <th className="text-left pb-2 font-medium">
+                <tr className="text-xs text-[#888888] uppercase tracking-widest" style={{ borderBottom: '1px solid #2a2a2a' }}>
+                  <th className="text-left pb-3 font-semibold">
                     {modo === 'por-arte' ? 'Lesión' : 'Arte marcial'}
                   </th>
-                  <th className="text-left pb-2 font-medium">Motivo</th>
+                  <th className="text-left pb-3 font-semibold">Motivo</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody>
                 {incompatibles.map((item, i) => (
-                  <tr key={i}>
-                    <td className="py-2 pr-4 font-medium text-white">
+                  <tr
+                    key={i}
+                    style={{
+                      borderBottom: '1px solid #1a1a1a',
+                      backgroundColor: i % 2 === 0 ? 'transparent' : '#0d0d0d',
+                    }}
+                  >
+                    <td className="py-3 pr-4 font-semibold text-[#f0f0f0]">
                       {modo === 'por-arte' ? item.lesion : item.arte}
                     </td>
-                    <td className="py-2 text-gray-400 text-xs max-w-xs">
+                    <td className="py-3 text-[#888888] text-xs max-w-xs">
                       {item.notas ?? '—'}
                     </td>
                   </tr>
