@@ -48,14 +48,23 @@ export interface Gimnasio {
   nombre: string;
   slug: string;
   descripcion?: string;
+  direccion?: string;
   ciudad?: string;
   provincia?: string;
+  codigo_postal?: string;
+  pais?: string;
   imagen_url?: string;
+  imagenes?: string[];
   precio_desde?: number;
   verificado: boolean;
+  activo?: boolean;
   artes?: string[];
   latitud?: number;
   longitud?: number;
+  telefono?: string;
+  email_contacto?: string;
+  sitio_web?: string;
+  horario?: Record<string, string>;
 }
 
 export interface Post {
