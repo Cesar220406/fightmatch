@@ -68,5 +68,6 @@ export interface Post {
   estado: EstadoPublicacion;
   publicado_en?: string;
   autor_nombre?: string;
+  autor_avatar?: string;
   etiquetas?: string[];
 }
