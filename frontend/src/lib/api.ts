@@ -1,4 +1,9 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+// En el servidor (SSR) usamos la URL interna de Docker.
+// En el cliente (browser) usamos la URL pública.
+const BASE_URL =
+  typeof window === 'undefined'
+    ? process.env.API_INTERNAL_URL || 'http://backend:4000/api'
+    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {

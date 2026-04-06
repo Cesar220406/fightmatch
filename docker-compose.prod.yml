@@ -61,6 +61,7 @@ services:
     restart: always
     environment:
       NODE_ENV: production
+      API_INTERNAL_URL: http://backend:4000/api
     depends_on:
       - backend
     networks:
