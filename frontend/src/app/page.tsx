@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import BuscadorHero from '@/components/BuscadorHero';
 import ArteCard from '@/components/ArteCard';
 import { api } from '@/lib/api';

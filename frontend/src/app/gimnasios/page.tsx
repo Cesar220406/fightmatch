@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import GimnasioCard from '@/components/GimnasioCard';
 import { api } from '@/lib/api';
 import type { Gimnasio, Lesion, ArteMarcial } from '@/types';

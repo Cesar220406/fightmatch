@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import ArteCard from '@/components/ArteCard';
 import { api } from '@/lib/api';
 import type { ArteMarcial } from '@/types';
