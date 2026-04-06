@@ -20,6 +20,7 @@ export default function Footer() {
               {[
                 ['/gimnasios', 'Gimnasios'],
                 ['/artes-marciales', 'Artes Marciales'],
+                ['/lesiones', 'Lesiones'],
                 ['/blog', 'Blog'],
               ].map(([href, label]) => (
                 <li key={href}>
