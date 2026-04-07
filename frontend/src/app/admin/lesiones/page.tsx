@@ -43,6 +43,16 @@ export default function AdminLesiones() {
     } finally { setLoading(false); }
   }
 
+  async function eliminar(id: number, nombre: string) {
+    if (!confirm(`¿Eliminar "${nombre}"?`)) return;
+    try {
+      await api.delete(`/lesiones/${id}`, getToken() ?? '');
+      cargar();
+    } catch (err: unknown) {
+      setMsg(`Error al eliminar: ${err instanceof Error ? err.message : 'Error'}`);
+    }
+  }
+
   const severidadColor: Record<string, string> = {
     leve: 'badge-green', moderada: 'badge-yellow', grave: 'badge-red',
   };
@@ -106,11 +116,17 @@ export default function AdminLesiones() {
                 className="flex items-center justify-between px-3 py-2.5 border border-[#1a1a1a]"
                 style={{ backgroundColor: i % 2 === 0 ? '#111111' : '#0d0d0d' }}
               >
-                <div>
+                <div className="flex-1 min-w-0 mr-2">
                   <p className="text-sm font-medium text-[#f0f0f0]">{l.nombre}</p>
                   <p className="text-xs text-[#444444] capitalize">{l.zona_corporal}</p>
                 </div>
-                <span className={severidadColor[l.severidad] ?? 'badge-gray'}>{l.severidad}</span>
+                <span className={`${severidadColor[l.severidad] ?? 'badge-gray'} mr-2`}>{l.severidad}</span>
+                <button
+                  onClick={() => eliminar(l.id, l.nombre)}
+                  className="text-xs text-[#666666] hover:text-red-400 transition-colors px-2 py-1 uppercase tracking-wider shrink-0"
+                >
+                  ×
+                </button>
               </div>
             ))}
             {lesiones.length === 0 && (

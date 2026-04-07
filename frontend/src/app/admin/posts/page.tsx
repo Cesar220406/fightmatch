@@ -17,7 +17,7 @@ export default function AdminPosts() {
   useEffect(() => { cargar(); }, []);
 
   async function cargar() {
-    const data = await api.get<Post[]>('/posts?page=1&limit=50').catch(() => []);
+    const data = await api.get<Post[]>('/posts?page=1&limit=50&admin=true').catch(() => []);
     setPosts(data);
   }
 
@@ -28,6 +28,16 @@ export default function AdminPosts() {
   function onChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
     setForm(f => ({ ...f, [name]: value, ...(name === 'titulo' ? { slug: slugify(value) } : {}) }));
+  }
+
+  async function eliminar(id: string, titulo: string) {
+    if (!confirm(`¿Eliminar "${titulo}"? Se eliminará permanentemente.`)) return;
+    try {
+      await api.delete(`/posts/${id}`, getToken() ?? '');
+      cargar();
+    } catch (err: unknown) {
+      alert(`Error al eliminar: ${err instanceof Error ? err.message : 'Error'}`);
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -111,11 +121,17 @@ export default function AdminPosts() {
                 className="flex items-center justify-between px-3 py-2.5 border border-[#1a1a1a]"
                 style={{ backgroundColor: i % 2 === 0 ? '#111111' : '#0d0d0d' }}
               >
-                <div className="min-w-0 flex-1 mr-3">
+                <div className="min-w-0 flex-1 mr-2">
                   <p className="text-sm font-medium text-[#f0f0f0] truncate">{p.titulo}</p>
                   <p className="text-xs text-[#444444]">{p.autor_nombre}</p>
                 </div>
-                <span className={estadoColor[p.estado] ?? 'badge-gray'}>{p.estado}</span>
+                <span className={`${estadoColor[p.estado] ?? 'badge-gray'} mr-2 shrink-0`}>{p.estado}</span>
+                <button
+                  onClick={() => eliminar(p.id, p.titulo)}
+                  className="text-xs text-[#666666] hover:text-red-400 transition-colors px-2 py-1 uppercase tracking-wider shrink-0"
+                >
+                  ×
+                </button>
               </div>
             ))}
             {posts.length === 0 && (

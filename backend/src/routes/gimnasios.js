@@ -74,6 +74,39 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
+// PUT /api/gimnasios/:id
+router.put('/:id', auth, requireRol('admin', 'gimnasio'), async (req, res) => {
+  const { nombre, slug, descripcion, direccion, ciudad, provincia,
+          codigo_postal, telefono, email_contacto, sitio_web, imagen_url,
+          precio_desde, verificado } = req.body;
+  try {
+    const { rows } = await pool.query(
+      `UPDATE gimnasios
+       SET nombre=$1, slug=$2, descripcion=$3, direccion=$4, ciudad=$5, provincia=$6,
+           codigo_postal=$7, telefono=$8, email_contacto=$9, sitio_web=$10,
+           imagen_url=$11, precio_desde=$12, verificado=COALESCE($13, verificado)
+       WHERE id=$14 RETURNING *`,
+      [nombre, slug, descripcion, direccion, ciudad, provincia,
+       codigo_postal, telefono, email_contacto, sitio_web,
+       imagen_url, precio_desde, verificado, req.params.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'No encontrado' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// DELETE /api/gimnasios/:id (soft delete)
+router.delete('/:id', auth, requireRol('admin'), async (req, res) => {
+  try {
+    await pool.query('UPDATE gimnasios SET activo=FALSE WHERE id=$1', [req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 // POST /api/gimnasios — crear gimnasio (rol: gimnasio, admin)
 router.post('/', auth, requireRol('gimnasio', 'admin'), async (req, res) => {
   const { nombre, slug, descripcion, direccion, ciudad, provincia,

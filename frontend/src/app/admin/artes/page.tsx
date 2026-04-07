@@ -44,6 +44,16 @@ export default function AdminArtes() {
     } finally { setLoading(false); }
   }
 
+  async function eliminar(id: number, nombre: string) {
+    if (!confirm(`¿Eliminar "${nombre}"? Esta acción es irreversible.`)) return;
+    try {
+      await api.delete(`/artes-marciales/${id}`, getToken() ?? '');
+      cargar();
+    } catch (err: unknown) {
+      setMsg(`Error al eliminar: ${err instanceof Error ? err.message : 'Error'}`);
+    }
+  }
+
   return (
     <div className="p-8">
       <div className="mb-8 pb-6" style={{ borderBottom: '1px solid #1a1a1a' }}>
@@ -99,6 +109,12 @@ export default function AdminArtes() {
                   <p className="text-sm font-medium text-[#f0f0f0]">{a.nombre}</p>
                   <p className="text-xs text-[#444444] font-mono">{a.slug}</p>
                 </div>
+                <button
+                  onClick={() => eliminar(a.id, a.nombre)}
+                  className="text-xs text-[#666666] hover:text-red-400 transition-colors px-2 py-1 uppercase tracking-wider"
+                >
+                  Eliminar
+                </button>
               </div>
             ))}
             {artes.length === 0 && (

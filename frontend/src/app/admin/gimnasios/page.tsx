@@ -32,6 +32,17 @@ export default function AdminGimnasios() {
     setForm(f => ({ ...f, [name]: value, ...(name === 'nombre' ? { slug: slugify(value) } : {}) }));
   }
 
+  async function eliminar(id: string, nombre: string) {
+    if (!confirm(`¿Eliminar "${nombre}"?`)) return;
+    try {
+      await api.delete(`/gimnasios/${id}`, getToken() ?? '');
+      const data = await api.get<Gimnasio[]>('/gimnasios').catch(() => []);
+      setGimnasios(data);
+    } catch (err: unknown) {
+      alert(`Error al eliminar: ${err instanceof Error ? err.message : 'Error'}`);
+    }
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true); setMsg('');
@@ -118,11 +129,17 @@ export default function AdminGimnasios() {
                 className="flex items-center justify-between px-3 py-2.5 border border-[#1a1a1a]"
                 style={{ backgroundColor: i % 2 === 0 ? '#111111' : '#0d0d0d' }}
               >
-                <div>
+                <div className="flex-1 min-w-0 mr-2">
                   <p className="text-sm font-medium text-[#f0f0f0]">{g.nombre}</p>
                   <p className="text-xs text-[#444444]">{g.ciudad}</p>
                 </div>
-                {g.verificado && <span className="badge-green">Verificado</span>}
+                {g.verificado && <span className="badge-green mr-2">Verificado</span>}
+                <button
+                  onClick={() => eliminar(g.id, g.nombre)}
+                  className="text-xs text-[#666666] hover:text-red-400 transition-colors px-2 py-1 uppercase tracking-wider shrink-0"
+                >
+                  ×
+                </button>
               </div>
             ))}
             {gimnasios.length === 0 && (

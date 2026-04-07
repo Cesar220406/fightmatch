@@ -2,12 +2,12 @@ const router = require('express').Router();
 const pool = require('../db/pool');
 const { auth, requireRol } = require('../middleware/auth');
 
-// GET /api/posts
+// GET /api/posts  (admin puede pasar ?admin=true para ver todos los estados)
 router.get('/', async (req, res) => {
-  const { page = 1, limit = 10, etiqueta } = req.query;
+  const { page = 1, limit = 10, etiqueta, admin } = req.query;
   const offset = (page - 1) * limit;
   const params = [];
-  const conditions = ["p.estado = 'publicado'"];
+  const conditions = admin === 'true' ? [] : ["p.estado = 'publicado'"];
 
   if (etiqueta) {
     params.push(etiqueta);
@@ -87,6 +87,45 @@ router.post('/', auth, requireRol('admin', 'editor'), async (req, res) => {
     res.status(500).json({ error: 'Error interno' });
   } finally {
     client.release();
+  }
+});
+
+// PUT /api/posts/:id
+router.put('/:id', auth, requireRol('admin', 'editor'), async (req, res) => {
+  const { titulo, slug, resumen, contenido, imagen_portada, estado, etiquetas = [] } = req.body;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows } = await client.query(
+      `UPDATE posts SET titulo=$1, slug=$2, resumen=$3, contenido=$4,
+              imagen_portada=$5, estado=$6,
+              publicado_en = CASE WHEN $6='publicado' AND publicado_en IS NULL THEN NOW() ELSE publicado_en END
+       WHERE id=$7 RETURNING *`,
+      [titulo, slug, resumen, contenido, imagen_portada, estado, req.params.id]
+    );
+    if (!rows[0]) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'No encontrado' }); }
+    await client.query('DELETE FROM post_etiquetas WHERE post_id=$1', [req.params.id]);
+    for (const tag of etiquetas) {
+      await client.query('INSERT INTO post_etiquetas (post_id, etiqueta) VALUES ($1,$2) ON CONFLICT DO NOTHING', [req.params.id, tag]);
+    }
+    await client.query('COMMIT');
+    res.json(rows[0]);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: 'Error interno' });
+  } finally {
+    client.release();
+  }
+});
+
+// DELETE /api/posts/:id
+router.delete('/:id', auth, requireRol('admin', 'editor'), async (req, res) => {
+  try {
+    await pool.query('DELETE FROM post_etiquetas WHERE post_id=$1', [req.params.id]);
+    await pool.query('DELETE FROM posts WHERE id=$1', [req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Error interno' });
   }
 });
 

@@ -2,21 +2,23 @@ export const dynamic = 'force-dynamic';
 
 import BuscadorHero from '@/components/BuscadorHero';
 import ArteCard from '@/components/ArteCard';
+import GimnasioCard from '@/components/GimnasioCard';
 import DragonDecoration from '@/components/DragonDecoration';
 import SectionDivider from '@/components/SectionDivider';
 import { api } from '@/lib/api';
-import type { Lesion, ArteMarcial } from '@/types';
+import type { Lesion, ArteMarcial, Gimnasio } from '@/types';
 
 async function getData() {
-  const [lesiones, artes] = await Promise.all([
+  const [lesiones, artes, gimnasios] = await Promise.all([
     api.get<Lesion[]>('/lesiones').catch(() => [] as Lesion[]),
     api.get<ArteMarcial[]>('/artes-marciales').catch(() => [] as ArteMarcial[]),
+    api.get<Gimnasio[]>('/gimnasios?limit=3').catch(() => [] as Gimnasio[]),
   ]);
-  return { lesiones, artes };
+  return { lesiones, artes, gimnasios };
 }
 
 export default async function Home() {
-  const { lesiones, artes } = await getData();
+  const { lesiones, artes, gimnasios } = await getData();
 
   return (
     <>
@@ -159,6 +161,37 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── Section Divider ──────────────────────────────── */}
+      {gimnasios.length > 0 && (
+        <>
+          <div className="page-container">
+            <SectionDivider label="Gimnasios destacados" />
+          </div>
+
+          {/* ── Gimnasios destacados ───────────────────────── */}
+          <section className="pb-16">
+            <div className="page-container">
+              <div className="flex items-end justify-between mb-10">
+                <h2 className="font-display text-4xl lg:text-5xl text-white uppercase tracking-wide">
+                  Gimnasios
+                </h2>
+                <a
+                  href="/gimnasios"
+                  className="text-xs font-semibold uppercase tracking-widest text-[#888888] hover:text-[#d4a017] transition-colors"
+                >
+                  Ver todos →
+                </a>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {gimnasios.map((g) => (
+                  <GimnasioCard key={g.id} g={g} />
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
 
       {/* ── Final divider ────────────────────────────────── */}
       <div className="page-container pb-8">

@@ -34,4 +34,10 @@ export const api = {
       body: JSON.stringify(data),
       ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
     }),
+
+  delete: <T>(path: string, token?: string) =>
+    request<T>(path, {
+      method: 'DELETE',
+      ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
+    }),
 };
