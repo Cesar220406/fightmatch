@@ -2,6 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import BuscadorHero from '@/components/BuscadorHero';
 import ArteCard from '@/components/ArteCard';
+import DragonDecoration from '@/components/DragonDecoration';
+import SectionDivider from '@/components/SectionDivider';
 import { api } from '@/lib/api';
 import type { Lesion, ArteMarcial } from '@/types';
 
@@ -19,21 +21,20 @@ export default async function Home() {
   return (
     <>
       {/* ── Hero ────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-[#0a0a0a]" style={{ borderBottom: '1px solid #2a2a2a' }}>
-        {/* Red glow */}
+      <section
+        className="relative overflow-hidden bg-[#0a0a0a]"
+        style={{ borderBottom: '1px solid #2a2a2a' }}
+      >
+        {/* Red atmospheric glow */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse at 70% 40%, rgba(196,30,30,0.12) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse at 75% 40%, rgba(196,30,30,0.10) 0%, transparent 55%)',
           }}
         />
-        {/* Noise texture overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-          }}
-        />
+
+        {/* Dragon decoration – behind search form */}
+        <DragonDecoration />
 
         <div className="page-container relative py-20 lg:py-32">
           <div className="grid lg:grid-cols-2 gap-16 items-start">
@@ -44,11 +45,13 @@ export default async function Home() {
                 className="inline-flex items-center gap-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#d4a017]"
                 style={{ border: '1px solid rgba(212,160,23,0.35)' }}
               >
-                <span className="h-1.5 w-1.5 bg-[#c41e1e] inline-block" />
+                {/* Small flame ornament */}
+                <svg width="10" height="12" viewBox="0 0 10 12" fill="none" aria-hidden="true">
+                  <path d="M5 11 C2 9 1 6 2 3 C1 5 0 4 1 2 C2 0 4 0 5 2 C5 0 6 0 7 2 C8 0 9 1 9 3 C8 5 7 6 7 8 C8 6 9 6 9 8 C8 10 7 11 5 11 Z" fill="#c41e1e"/>
+                </svg>
                 Plataforma para deportistas con lesiones
               </div>
 
-              {/* Big Bebas title */}
               <h1 className="font-display text-7xl lg:text-9xl text-[#d4a017] leading-none uppercase tracking-wide">
                 Entrena<br />
                 <span className="text-white">Sin</span>{' '}
@@ -57,7 +60,8 @@ export default async function Home() {
 
               <p className="text-base text-[#888888] max-w-md leading-relaxed">
                 Encuentra el arte marcial y el gimnasio perfectos para ti,
-                teniendo en cuenta tus <span className="text-[#f0f0f0] font-medium">lesiones</span> y tu{' '}
+                teniendo en cuenta tus{' '}
+                <span className="text-[#f0f0f0] font-medium">lesiones</span> y tu{' '}
                 <span className="text-[#f0f0f0] font-medium">ubicación</span>.
               </p>
 
@@ -75,7 +79,7 @@ export default async function Home() {
             </div>
 
             {/* Right: Buscador */}
-            <div className="card-gold shadow-2xl shadow-black/70">
+            <div className="card-gold shadow-2xl shadow-black/70 relative z-10">
               <h2 className="font-display text-2xl text-white uppercase tracking-widest mb-6">
                 Encuentra tu gimnasio
               </h2>
@@ -85,15 +89,16 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── Diagonal divider ────────────────────────────── */}
-      <div className="slash-divider" />
+      {/* ── Section Divider ──────────────────────────────── */}
+      <div className="page-container">
+        <SectionDivider label="Disciplinas" />
+      </div>
 
       {/* ── Artes Marciales destacadas ──────────────────── */}
-      <section className="py-16">
+      <section className="pb-16">
         <div className="page-container">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <p className="text-xs text-[#d4a017] uppercase tracking-widest font-semibold mb-2">Disciplinas</p>
               <h2 className="font-display text-4xl lg:text-5xl text-white uppercase tracking-wide">
                 Artes Marciales
               </h2>
@@ -113,11 +118,15 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── Section Divider ──────────────────────────────── */}
+      <div className="page-container">
+        <SectionDivider />
+      </div>
+
       {/* ── Cómo funciona ───────────────────────────────── */}
-      <section className="py-20" style={{ borderTop: '1px solid #2a2a2a' }}>
+      <section className="py-20">
         <div className="page-container">
           <div className="text-center mb-14">
-            <p className="text-xs text-[#d4a017] uppercase tracking-widest font-semibold mb-3">Proceso</p>
             <h2 className="font-display text-4xl lg:text-6xl text-white uppercase tracking-wide">
               ¿Cómo funciona?
             </h2>
@@ -150,6 +159,11 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── Final divider ────────────────────────────────── */}
+      <div className="page-container pb-8">
+        <SectionDivider label="FightMatch" />
+      </div>
     </>
   );
 }

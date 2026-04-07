@@ -88,8 +88,23 @@ export default function BuscadorHero({ lesiones }: { lesiones: Lesion[] }) {
         </p>
       )}
 
-      <button type="submit" className="btn-primary w-full py-3 text-sm">
-        Buscar gimnasios
+      {/* Search button with claw/flame decorations */}
+      <button type="submit" className="btn-primary w-full py-3 text-sm relative overflow-hidden group/btn">
+        {/* Left claw */}
+        <svg width="18" height="20" viewBox="0 0 18 20" fill="none" className="shrink-0 opacity-70 group-hover/btn:opacity-100 transition-opacity" aria-hidden="true">
+          <path d="M 9 18 C 4 16 1 12 2 8 C 1 10 0 8 1 6 C 2 4 4 4 5 6 C 4 4 4 2 6 1 C 7 3 6 5 7 7 C 8 4 9 3 11 3 C 10 5 9 7 10 9 C 11 6 13 6 14 8 C 12 9 11 11 11 13 C 13 11 15 11 16 14 C 13 14 12 16 13 18 Z" fill="#d4a017"/>
+          <path d="M 5 6 C 3 8 3 11 5 13" stroke="#c41e1e" strokeWidth="0.8" fill="none" opacity="0.8"/>
+          <path d="M 8 4 C 7 7 8 10 10 12" stroke="#c41e1e" strokeWidth="0.8" fill="none" opacity="0.8"/>
+        </svg>
+
+        <span className="uppercase tracking-widest font-semibold">Buscar gimnasios</span>
+
+        {/* Right claw (flipped) */}
+        <svg width="18" height="20" viewBox="0 0 18 20" fill="none" className="shrink-0 opacity-70 group-hover/btn:opacity-100 transition-opacity scale-x-[-1]" aria-hidden="true">
+          <path d="M 9 18 C 4 16 1 12 2 8 C 1 10 0 8 1 6 C 2 4 4 4 5 6 C 4 4 4 2 6 1 C 7 3 6 5 7 7 C 8 4 9 3 11 3 C 10 5 9 7 10 9 C 11 6 13 6 14 8 C 12 9 11 11 11 13 C 13 11 15 11 16 14 C 13 14 12 16 13 18 Z" fill="#d4a017"/>
+          <path d="M 5 6 C 3 8 3 11 5 13" stroke="#c41e1e" strokeWidth="0.8" fill="none" opacity="0.8"/>
+          <path d="M 8 4 C 7 7 8 10 10 12" stroke="#c41e1e" strokeWidth="0.8" fill="none" opacity="0.8"/>
+        </svg>
       </button>
     </form>
   );

@@ -37,7 +37,24 @@ export default function Nav() {
       <div className="page-container flex h-16 items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-0 font-display text-2xl tracking-widest text-white uppercase">
+        <Link href="/" className="flex items-center gap-2 font-display text-2xl tracking-widest text-white uppercase">
+          {/* Mini dragon seal */}
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true" className="shrink-0">
+            {/* Body */}
+            <path d="M 18 20 C 15 17 11 15 9 12 C 7 9 8 6 10 4 C 8 5 6 7 6 10 C 5 8 5 5 7 3 C 9 1 12 1 14 3 C 12 2 10 3 9 5 C 11 3 14 3 16 5 C 18 7 18 10 16 12 C 18 10 19 13 18 16 Z"
+              fill="#6b7280" opacity="0.9"/>
+            {/* Flame */}
+            <path d="M 8 12 C 6 10 5 7 7 5 C 5 7 4 6 5 4 C 6 3 8 3 9 5 C 8 4 7 5 7 7 C 8 5 9 5 10 7 Z"
+              fill="#c41e1e" opacity="0.9"/>
+            {/* Eye */}
+            <circle cx="14" cy="4" r="1.5" fill="#c41e1e"/>
+            <circle cx="14.5" cy="3.5" r="0.5" fill="white" opacity="0.9"/>
+            {/* Whisker */}
+            <line x1="15" y1="5" x2="21" y2="3" stroke="#d4a017" strokeWidth="0.8" strokeLinecap="round"/>
+            <line x1="15" y1="6" x2="21" y2="6" stroke="#d4a017" strokeWidth="0.8" strokeLinecap="round"/>
+            {/* Claw */}
+            <path d="M 10 19 C 8 20 7 21 8 22 C 7 21 6 20 7 19 C 6 20 5 21 6 22" stroke="#d4a017" strokeWidth="0.8" strokeLinecap="round"/>
+          </svg>
           <span className="text-[#c41e1e]">Fight</span>Match
         </Link>
 
