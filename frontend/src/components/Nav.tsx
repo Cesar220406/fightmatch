@@ -37,7 +37,8 @@ export default function Nav() {
       <div className="page-container flex h-16 items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-0 font-display text-2xl tracking-widest text-white uppercase">
+        <Link href="/" className="flex items-center gap-2 font-display text-2xl tracking-widest text-white uppercase">
+          <img src="/images/dragon.png" alt="" aria-hidden="true" className="shrink-0 h-6 w-auto" />
           <span className="text-[#c41e1e]">Fight</span>Match
         </Link>
 

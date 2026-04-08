@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
 import { api } from '@/lib/api';
-import type { Usuario, Lesion } from '@/types';
+import type { Usuario, Lesion, Gimnasio } from '@/types';
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -12,6 +14,7 @@ export default function PerfilPage() {
   const [seleccionadas, setSeleccionadas] = useState<number[]>([]);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState('');
+  const [favoritos, setFavoritos] = useState<Gimnasio[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -20,10 +23,12 @@ export default function PerfilPage() {
     Promise.all([
       api.get<Usuario>('/usuarios/me', token),
       api.get<Lesion[]>('/lesiones'),
-    ]).then(([userData, lesionesData]) => {
+      api.get<Gimnasio[]>('/favoritos', token).catch(() => [] as Gimnasio[]),
+    ]).then(([userData, lesionesData, favData]) => {
       setUser(userData);
       setLesionesAll(lesionesData);
       setSeleccionadas(userData.lesiones?.map((l) => l.id) ?? []);
+      setFavoritos(favData);
     }).catch(() => {
       localStorage.removeItem('token');
       router.push('/auth/login');
@@ -43,8 +48,10 @@ export default function PerfilPage() {
     try {
       await api.put('/usuarios/me/lesiones', { lesion_ids: seleccionadas }, token);
       setMensaje('Lesiones actualizadas correctamente.');
+      toast.success('Lesiones guardadas');
     } catch {
       setMensaje('Error al guardar. Inténtalo de nuevo.');
+      toast.error('Error al guardar');
     } finally {
       setGuardando(false);
     }
@@ -106,6 +113,21 @@ export default function PerfilPage() {
           </div>
         </div>
 
+        {/* Panel Gimnasio */}
+        {user.rol === 'gimnasio' && (
+          <div className="card mb-8" style={{ borderLeft: '3px solid #d4a017' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-display text-2xl text-white uppercase tracking-wide mb-1">Mi Gimnasio</h2>
+                <p className="text-sm text-[#888888]">Edita los datos y artes marciales de tu gimnasio.</p>
+              </div>
+              <Link href="/perfil/gimnasio" className="btn-primary shrink-0">
+                Gestionar →
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Lesiones */}
         <div className="card">
           <h2 className="font-display text-2xl text-white uppercase tracking-wide mb-2">Mis lesiones</h2>
@@ -157,6 +179,53 @@ export default function PerfilPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Favoritos */}
+      <div className="card mt-8">
+        <h2 className="font-display text-2xl text-white uppercase tracking-wide mb-2">Mis favoritos</h2>
+        <p className="text-sm text-[#888888] mb-6 leading-relaxed">
+          Gimnasios que has guardado para consultar más tarde.
+        </p>
+
+        {favoritos.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-xs text-[#888888] uppercase tracking-widest mb-4">
+              No tienes gimnasios guardados aún.
+            </p>
+            <Link href="/gimnasios" className="btn-secondary text-xs">
+              Explorar gimnasios
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {favoritos.map((g) => (
+              <Link
+                key={g.id}
+                href={`/gimnasios/${g.slug}`}
+                className="flex items-center justify-between px-4 py-3 border border-[#2a2a2a] bg-[#111111] hover:border-[#d4a017]/40 hover:bg-[#0d0d0d] transition-all group"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-[#f0f0f0] group-hover:text-[#d4a017] transition-colors truncate">
+                    {g.nombre}
+                  </p>
+                  {g.ciudad && (
+                    <p className="text-xs text-[#888888] mt-0.5">{g.ciudad}{g.provincia ? `, ${g.provincia}` : ''}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-3">
+                  {g.verificado && <span className="badge-green">Verificado</span>}
+                  {g.precio_desde && (
+                    <span className="text-xs text-[#d4a017] font-semibold">{g.precio_desde}€/mes</span>
+                  )}
+                  <svg className="h-4 w-4 text-[#444444] group-hover:text-[#d4a017] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

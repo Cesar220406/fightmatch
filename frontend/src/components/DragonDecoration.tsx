@@ -5,7 +5,7 @@ export default function DragonDecoration() {
       alt=""
       aria-hidden="true"
       className="absolute right-0 top-0 h-full w-auto pointer-events-none select-none"
-      style={{ objectFit: 'contain', objectPosition: 'right center', opacity: 0.2 }}
+      style={{ opacity: 0.09, maxWidth: '55%', objectFit: 'contain', objectPosition: 'right top' }}
     />
   );
 }

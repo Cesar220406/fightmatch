@@ -17,7 +17,7 @@ export default function AdminPosts() {
   useEffect(() => { cargar(); }, []);
 
   async function cargar() {
-    const data = await api.get<Post[]>('/posts?page=1&limit=50&admin=true').catch(() => []);
+    const data = await api.get<Post[]>('/posts?page=1&limit=50&admin=true', getToken() ?? '').catch(() => []);
     setPosts(data);
   }
 

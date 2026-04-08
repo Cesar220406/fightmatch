@@ -37,11 +37,23 @@ export default async function ArteDetalleP({ params }: { params: { slug: string 
 
         {/* Hero */}
         <div className="grid md:grid-cols-2 gap-10 mb-12 items-start">
-          <div className="aspect-video overflow-hidden bg-[#111111]">
+          <div className="aspect-video overflow-hidden bg-[#111111] relative">
             {arte.imagen_url ? (
               <img src={arte.imagen_url} alt={arte.nombre} className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full items-center justify-center text-7xl text-[#333333]">🥋</div>
+              <div className="flex h-full items-center justify-center">
+                <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-24 h-24 opacity-20">
+                  {/* Gi uniform silhouette */}
+                  <circle cx="60" cy="22" r="14" stroke="#d4a017" strokeWidth="2"/>
+                  <path d="M 60 36 C 60 36 48 42 42 56 L 42 90 L 78 90 L 78 56 C 72 42 60 36 60 36 Z" stroke="#d4a017" strokeWidth="2" fill="none"/>
+                  <path d="M 60 36 L 50 50 L 56 58 Z" fill="#d4a017" opacity="0.5"/>
+                  <path d="M 60 36 L 70 50 L 64 58 Z" fill="#c41e1e" opacity="0.6"/>
+                  <line x1="42" y1="64" x2="78" y2="64" stroke="#d4a017" strokeWidth="2" opacity="0.6"/>
+                  <rect x="53" y="61" width="14" height="6" fill="#c41e1e" opacity="0.5"/>
+                  <path d="M 42 56 L 28 62 L 30 80 L 42 76" stroke="#d4a017" strokeWidth="2" fill="none"/>
+                  <path d="M 78 56 L 92 62 L 90 80 L 78 76" stroke="#d4a017" strokeWidth="2" fill="none"/>
+                </svg>
+              </div>
             )}
           </div>
 

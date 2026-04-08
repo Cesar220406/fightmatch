@@ -1,8 +1,16 @@
 export const dynamic = 'force-dynamic';
 
+import type { Metadata } from 'next';
+export const metadata: Metadata = {
+  title: 'Gimnasios de artes marciales',
+  description: 'Encuentra el gimnasio de artes marciales ideal para ti, adaptado a tus lesiones y ubicación.',
+};
+
 import GimnasioCard from '@/components/GimnasioCard';
 import { api } from '@/lib/api';
 import type { Gimnasio, Lesion, ArteMarcial } from '@/types';
+
+const PAGE_SIZE = 12;
 
 interface SearchParams {
   ciudad?: string;
@@ -12,18 +20,20 @@ interface SearchParams {
 }
 
 async function getData(params: SearchParams) {
+  const page = Number(params.page ?? 1);
   const qs = new URLSearchParams();
   if (params.ciudad) qs.set('ciudad', params.ciudad);
   if (params.arte)   qs.set('arte', params.arte);
-  if (params.lesion) qs.set('lesion_id', params.lesion.split(',')[0]);
-  qs.set('page', params.page ?? '1');
+  if (params.lesion) qs.set('lesion_id', params.lesion); // pass all IDs, backend handles comma-separated
+  qs.set('page', String(page));
+  qs.set('limit', String(PAGE_SIZE));
 
   const [gimnasios, lesionesAll, artesAll] = await Promise.all([
     api.get<Gimnasio[]>(`/gimnasios?${qs.toString()}`).catch(() => [] as Gimnasio[]),
     api.get<Lesion[]>('/lesiones').catch(() => [] as Lesion[]),
     api.get<ArteMarcial[]>('/artes-marciales').catch(() => [] as ArteMarcial[]),
   ]);
-  return { gimnasios, lesionesAll, artesAll };
+  return { gimnasios, lesionesAll, artesAll, page };
 }
 
 export default async function GimnasiosPage({
@@ -31,11 +41,25 @@ export default async function GimnasiosPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { gimnasios, lesionesAll, artesAll } = await getData(searchParams);
+  const { gimnasios, lesionesAll, artesAll, page } = await getData(searchParams);
 
-  const lesionActiva = searchParams.lesion
+  const lesionesActivas = searchParams.lesion
     ? lesionesAll.filter((l) => searchParams.lesion!.split(',').map(Number).includes(l.id))
     : [];
+
+  const hasFilters = !!(searchParams.ciudad || searchParams.arte || searchParams.lesion);
+
+  function pageUrl(p: number) {
+    const qs = new URLSearchParams();
+    if (searchParams.ciudad) qs.set('ciudad', searchParams.ciudad);
+    if (searchParams.arte)   qs.set('arte', searchParams.arte);
+    if (searchParams.lesion) qs.set('lesion', searchParams.lesion);
+    qs.set('page', String(p));
+    return `/gimnasios?${qs.toString()}`;
+  }
+
+  const hasMore = gimnasios.length === PAGE_SIZE;
+  const hasPrev = page > 1;
 
   return (
     <div className="py-14">
@@ -47,17 +71,12 @@ export default async function GimnasiosPage({
           <h1 className="font-display text-5xl lg:text-6xl text-white uppercase tracking-wide mb-3">
             Gimnasios
           </h1>
-          {lesionActiva.length > 0 && (
-            <p className="text-sm text-[#888888] flex items-center gap-2 flex-wrap">
+          {lesionesActivas.length > 0 && (
+            <p className="text-sm text-[#888888] flex items-center gap-2 flex-wrap mt-2">
               Filtrando por lesión:
-              {lesionActiva.map((l) => (
+              {lesionesActivas.map((l) => (
                 <span key={l.id} className="badge-yellow">{l.nombre}</span>
               ))}
-            </p>
-          )}
-          {searchParams.ciudad && (
-            <p className="text-sm text-[#888888] mt-1">
-              Ciudad: <span className="text-[#f0f0f0] font-medium">{searchParams.ciudad}</span>
             </p>
           )}
         </div>
@@ -77,7 +96,7 @@ export default async function GimnasiosPage({
             ))}
           </select>
           <button type="submit" className="btn-primary">Filtrar</button>
-          {(searchParams.ciudad || searchParams.arte || searchParams.lesion) && (
+          {hasFilters && (
             <a href="/gimnasios" className="btn-secondary">Limpiar</a>
           )}
         </form>
@@ -94,13 +113,34 @@ export default async function GimnasiosPage({
         ) : (
           <>
             <p className="text-xs text-[#888888] uppercase tracking-widest mb-6">
-              {gimnasios.length} resultado{gimnasios.length !== 1 ? 's' : ''}
+              {gimnasios.length < PAGE_SIZE
+                ? `${gimnasios.length} resultado${gimnasios.length !== 1 ? 's' : ''}`
+                : `Página ${page}`}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {gimnasios.map((g) => (
                 <GimnasioCard key={g.id} g={g} />
               ))}
             </div>
+
+            {/* Pagination */}
+            {(hasPrev || hasMore) && (
+              <div className="flex items-center justify-center gap-4 mt-14 pt-8 border-t border-[#2a2a2a]">
+                {hasPrev ? (
+                  <a href={pageUrl(page - 1)} className="btn-secondary text-xs">← Anterior</a>
+                ) : (
+                  <span className="btn-secondary text-xs opacity-30 pointer-events-none">← Anterior</span>
+                )}
+                <span className="text-xs text-[#444444] uppercase tracking-widest font-semibold">
+                  Página {page}
+                </span>
+                {hasMore ? (
+                  <a href={pageUrl(page + 1)} className="btn-secondary text-xs">Siguiente →</a>
+                ) : (
+                  <span className="btn-secondary text-xs opacity-30 pointer-events-none">Siguiente →</span>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

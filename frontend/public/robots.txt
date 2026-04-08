@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Disallow private/admin areas
+Disallow: /admin/
+Disallow: /perfil/
+Disallow: /auth/
+Disallow: /api/
+
+Sitemap: https://fightmatch.duckdns.org/sitemap.xml

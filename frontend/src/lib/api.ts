@@ -40,4 +40,11 @@ export const api = {
       method: 'DELETE',
       ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
     }),
+
+  patch: <T>(path: string, data: unknown, token?: string) =>
+    request<T>(path, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+      ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
+    }),
 };

@@ -20,7 +20,7 @@ export default function BuscadorHero({ lesiones }: { lesiones: Lesion[] }) {
     const params = new URLSearchParams();
     if (ciudad.trim()) params.set('ciudad', ciudad.trim());
     if (seleccionadas.length) params.set('lesion', seleccionadas.join(','));
-    router.push(`/gimnasios?${params.toString()}`);
+    router.push(`/buscar?${params.toString()}`);
   }
 
   const porZona = lesiones.reduce<Record<string, Lesion[]>>((acc, l) => {

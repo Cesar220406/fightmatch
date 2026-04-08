@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { api } from '@/lib/api';
 
 export default function LoginPage() {
@@ -26,6 +27,7 @@ export default function LoginPage() {
       );
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      toast.success(`Bienvenido, ${data.user.nombre}`);
       router.push('/perfil');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Credenciales incorrectas');

@@ -7,7 +7,9 @@ import type { ArteMarcial, Lesion } from '@/types';
 
 interface Compatibilidad {
   id: number;
+  arte: string;
   arte_marcial_id: number;
+  lesion: string;
   lesion_id: number;
   compatible: boolean;
   nivel_recomendado?: string;
@@ -15,8 +17,9 @@ interface Compatibilidad {
 }
 
 export default function AdminCompatibilidades() {
-  const [artes, setArtes]       = useState<ArteMarcial[]>([]);
-  const [lesiones, setLesiones] = useState<Lesion[]>([]);
+  const [artes, setArtes]                 = useState<ArteMarcial[]>([]);
+  const [lesiones, setLesiones]           = useState<Lesion[]>([]);
+  const [compatibilidades, setCompats]    = useState<Compatibilidad[]>([]);
   const [form, setForm] = useState({
     arte_marcial_id: '',
     lesion_id: '',
@@ -28,11 +31,18 @@ export default function AdminCompatibilidades() {
   const [msg, setMsg] = useState('');
 
   useEffect(() => {
+    const token = getToken() ?? '';
     Promise.all([
       api.get<ArteMarcial[]>('/artes-marciales').catch(() => []),
       api.get<Lesion[]>('/lesiones').catch(() => []),
-    ]).then(([a, l]) => { setArtes(a); setLesiones(l); });
+      api.get<Compatibilidad[]>('/compatibilidades/all', token).catch(() => []),
+    ]).then(([a, l, c]) => { setArtes(a); setLesiones(l); setCompats(c); });
   }, []);
+
+  async function cargarCompats() {
+    const data = await api.get<Compatibilidad[]>('/compatibilidades/all', getToken() ?? '').catch(() => []);
+    setCompats(data);
+  }
 
   function onChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
@@ -51,9 +61,20 @@ export default function AdminCompatibilidades() {
         notas:             form.notas || null,
       }, getToken() ?? '');
       setMsg('Compatibilidad guardada correctamente.');
+      cargarCompats();
     } catch (err: unknown) {
       setMsg(`Error: ${err instanceof Error ? err.message : 'Error desconocido'}`);
     } finally { setLoading(false); }
+  }
+
+  async function eliminar(id: number) {
+    if (!confirm('¿Eliminar esta compatibilidad?')) return;
+    try {
+      await api.delete(`/compatibilidades/${id}`, getToken() ?? '');
+      cargarCompats();
+    } catch (err: unknown) {
+      setMsg(`Error al eliminar: ${err instanceof Error ? err.message : 'Error'}`);
+    }
   }
 
   return (
@@ -63,7 +84,8 @@ export default function AdminCompatibilidades() {
         <h1 className="font-display text-4xl text-white uppercase tracking-wide">Compatibilidades</h1>
       </div>
 
-      <div className="max-w-xl">
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Formulario */}
         <div className="bg-[#0d0d0d] border border-[#1a1a1a] p-6" style={{ borderLeft: '3px solid #d4a017' }}>
           <h2 className="font-display text-xl text-white uppercase tracking-wide mb-2">
             Nueva compatibilidad
@@ -143,6 +165,45 @@ export default function AdminCompatibilidades() {
               {loading ? 'Guardando...' : 'Guardar compatibilidad'}
             </button>
           </form>
+        </div>
+
+        {/* Listado */}
+        <div className="bg-[#0d0d0d] border border-[#1a1a1a] p-6" style={{ borderLeft: '3px solid #c41e1e' }}>
+          <h2 className="font-display text-xl text-white uppercase tracking-wide mb-5">
+            Registradas <span className="text-[#d4a017]">({compatibilidades.length})</span>
+          </h2>
+          <div className="space-y-1 max-h-[520px] overflow-y-auto">
+            {compatibilidades.map((c, i) => (
+              <div
+                key={c.id}
+                className="flex items-center gap-2 px-3 py-2 border border-[#1a1a1a] text-xs"
+                style={{ backgroundColor: i % 2 === 0 ? '#111111' : '#0d0d0d' }}
+              >
+                <div className="flex-1 min-w-0">
+                  <span className="font-semibold text-[#f0f0f0]">{c.arte}</span>
+                  <span className="text-[#444444] mx-1.5">+</span>
+                  <span className="text-[#888888]">{c.lesion}</span>
+                </div>
+                <span className={c.compatible ? 'badge-green shrink-0' : 'badge-red shrink-0'}>
+                  {c.compatible ? 'OK' : 'NO'}
+                </span>
+                {c.nivel_recomendado && (
+                  <span className="badge-yellow shrink-0">{c.nivel_recomendado}</span>
+                )}
+                <button
+                  onClick={() => eliminar(c.id)}
+                  className="text-[#666666] hover:text-red-400 transition-colors px-1.5 py-1 shrink-0"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {compatibilidades.length === 0 && (
+              <p className="text-xs text-[#888888] uppercase tracking-widest py-4">
+                Sin compatibilidades registradas.
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -7,5 +7,7 @@ router.use('/artes-marciales',require('./artesMarciales'));
 router.use('/lesiones',       require('./lesiones'));
 router.use('/compatibilidades',require('./compatibilidades'));
 router.use('/posts',          require('./posts'));
+router.use('/favoritos',      require('./favoritos'));
+router.use('/contactos',      require('./contactos'));
 
 module.exports = router;

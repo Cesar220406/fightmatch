@@ -46,3 +46,14 @@ next-env.d.ts
 
 # TypeScript
 *.tsbuildinfo
+
+# Lock files (generados automáticamente)
+package-lock.json
+
+# Prod env (nunca al repo)
+.env.prod
+
+# Temp scripts locales
+setup_db.bat
+start_backend.bat
+*.log

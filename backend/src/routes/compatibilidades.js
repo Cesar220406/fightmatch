@@ -2,6 +2,25 @@ const router = require('express').Router();
 const pool = require('../db/pool');
 const { auth, requireRol } = require('../middleware/auth');
 
+// GET /api/compatibilidades/all — all entries, admin only
+router.get('/all', auth, requireRol('admin', 'editor'), async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT c.id, c.compatible, c.nivel_recomendado, c.notas,
+              am.nombre AS arte, am.id AS arte_marcial_id,
+              l.nombre AS lesion, l.id AS lesion_id
+       FROM compatibilidades c
+       JOIN artes_marciales am ON am.id = c.arte_marcial_id
+       JOIN lesiones l ON l.id = c.lesion_id
+       ORDER BY am.nombre, l.nombre`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 // GET /api/compatibilidades?lesiones=1,2,3 — busca artes compatibles con múltiples lesiones
 router.get('/', async (req, res) => {
   const { lesiones } = req.query;
@@ -43,6 +62,17 @@ router.post('/', auth, requireRol('admin', 'editor'), async (req, res) => {
       [arte_marcial_id, lesion_id, compatible, nivel_recomendado ?? null, notas ?? null, req.user.id]
     );
     res.status(201).json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// DELETE /api/compatibilidades/:id
+router.delete('/:id', auth, requireRol('admin', 'editor'), async (req, res) => {
+  try {
+    await pool.query('DELETE FROM compatibilidades WHERE id=$1', [req.params.id]);
+    res.json({ ok: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error interno' });

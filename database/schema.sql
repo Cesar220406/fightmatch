@@ -239,3 +239,20 @@ CREATE TRIGGER trg_compatibilidades_updated_at
 CREATE TRIGGER trg_posts_updated_at
     BEFORE UPDATE ON posts
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- ============================================================
+-- CONTACTOS (mensajes de visitantes a gimnasios)
+-- ============================================================
+
+CREATE TABLE contactos (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    gimnasio_id     UUID NOT NULL REFERENCES gimnasios(id) ON DELETE CASCADE,
+    nombre          VARCHAR(150) NOT NULL,
+    email           VARCHAR(255) NOT NULL,
+    mensaje         TEXT NOT NULL,
+    leido           BOOLEAN NOT NULL DEFAULT FALSE,
+    creado_en       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_contactos_gimnasio ON contactos(gimnasio_id);
+CREATE INDEX idx_contactos_leido    ON contactos(leido);

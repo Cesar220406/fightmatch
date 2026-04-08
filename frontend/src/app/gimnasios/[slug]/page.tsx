@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import FavoritoBtn from '@/components/FavoritoBtn';
+import ContactarModal from '@/components/ContactarModal';
 import type { Gimnasio } from '@/types';
 import type { Metadata } from 'next';
 
@@ -42,7 +44,27 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
           {g.imagen_url ? (
             <img src={g.imagen_url} alt={g.nombre} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full items-center justify-center text-7xl text-[#333333]">🏋️</div>
+            <div className="flex h-full items-center justify-center">
+              <svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-36 h-24 opacity-15">
+                {/* Building outline */}
+                <rect x="20" y="20" width="80" height="50" stroke="#d4a017" strokeWidth="1.5"/>
+                {/* Windows */}
+                <rect x="30" y="30" width="18" height="14" stroke="#d4a017" strokeWidth="1"/>
+                <rect x="52" y="30" width="18" height="14" stroke="#d4a017" strokeWidth="1"/>
+                <rect x="74" y="30" width="18" height="14" stroke="#d4a017" strokeWidth="1"/>
+                {/* Door */}
+                <rect x="48" y="50" width="24" height="20" stroke="#d4a017" strokeWidth="1"/>
+                <circle cx="70" cy="61" r="2" fill="#c41e1e"/>
+                {/* Roof line */}
+                <path d="M 10 20 L 60 5 L 110 20" stroke="#d4a017" strokeWidth="1.5" fill="none"/>
+                {/* Ground */}
+                <line x1="5" y1="70" x2="115" y2="70" stroke="#d4a017" strokeWidth="1" opacity="0.4"/>
+                {/* Barbell silhouette on sign */}
+                <line x1="44" y1="36" x2="64" y2="36" stroke="#c41e1e" strokeWidth="2" opacity="0.7"/>
+                <rect x="38" y="33" width="6" height="6" rx="0" fill="#c41e1e" opacity="0.5"/>
+                <rect x="64" y="33" width="6" height="6" rx="0" fill="#c41e1e" opacity="0.5"/>
+              </svg>
+            </div>
           )}
         </div>
 
@@ -150,7 +172,11 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
                 )}
               </div>
 
-              <button className="btn-primary w-full">Contactar</button>
+              <ContactarModal gimnasioId={g.id} gimnasioNombre={g.nombre} />
+              <div className="mt-3 flex items-center justify-center gap-2 text-xs text-[#888888] uppercase tracking-widest">
+                <FavoritoBtn gimnasioId={g.id} />
+                <span>Guardar en favoritos</span>
+              </div>
             </div>
           </div>
         </div>

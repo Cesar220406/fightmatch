@@ -1,13 +1,14 @@
 const router = require('express').Router();
 const pool = require('../db/pool');
-const { auth, requireRol } = require('../middleware/auth');
+const { auth, optionalAuth, requireRol } = require('../middleware/auth');
 
-// GET /api/posts  (admin puede pasar ?admin=true para ver todos los estados)
-router.get('/', async (req, res) => {
+// GET /api/posts  (admin/editor pueden pasar ?admin=true para ver todos los estados)
+router.get('/', optionalAuth, async (req, res) => {
   const { page = 1, limit = 10, etiqueta, admin } = req.query;
   const offset = (page - 1) * limit;
+  const isPrivileged = admin === 'true' && req.user && ['admin', 'editor'].includes(req.user.rol);
   const params = [];
-  const conditions = admin === 'true' ? [] : ["p.estado = 'publicado'"];
+  const conditions = isPrivileged ? [] : ["p.estado = 'publicado'"];
 
   if (etiqueta) {
     params.push(etiqueta);
@@ -17,19 +18,19 @@ router.get('/', async (req, res) => {
   }
 
   params.push(Number(limit), Number(offset));
-  const where = conditions.join(' AND ');
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   try {
     const { rows } = await pool.query(
-      `SELECT p.id, p.titulo, p.slug, p.resumen, p.imagen_portada, p.publicado_en,
+      `SELECT p.id, p.titulo, p.slug, p.resumen, p.imagen_portada, p.publicado_en, p.estado,
               u.nombre AS autor_nombre,
               array_agg(DISTINCT pe.etiqueta) FILTER (WHERE pe.etiqueta IS NOT NULL) AS etiquetas
        FROM posts p
        JOIN usuarios u ON u.id = p.autor_id
        LEFT JOIN post_etiquetas pe ON pe.post_id = p.id
-       WHERE ${where}
-       GROUP BY p.id, u.nombre
-       ORDER BY p.publicado_en DESC
+       ${where}
+       GROUP BY p.id, p.estado, u.nombre
+       ORDER BY p.publicado_en DESC NULLS LAST
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
     );

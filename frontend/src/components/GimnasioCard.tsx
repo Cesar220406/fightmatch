@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Gimnasio } from '@/types';
+import FavoritoBtn from './FavoritoBtn';
 
 /* Asanoha (hemp leaf) corner ornament — very subtle */
 function CornerPattern() {
@@ -52,10 +53,13 @@ export default function GimnasioCard({ g }: { g: Gimnasio }) {
       {/* Info */}
       <div className="flex flex-col gap-2 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-[#f0f0f0] leading-snug group-hover:text-[#d4a017] transition-colors">
+          <h3 className="font-semibold text-[#f0f0f0] leading-snug group-hover:text-[#d4a017] transition-colors flex-1">
             {g.nombre}
           </h3>
-          {g.verificado && <span className="badge-green shrink-0">Verificado</span>}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {g.verificado && <span className="badge-green">Verificado</span>}
+            <FavoritoBtn gimnasioId={g.id} />
+          </div>
         </div>
 
         {g.ciudad && (
