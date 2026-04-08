@@ -159,6 +159,17 @@ CREATE TABLE usuario_lesiones (
 CREATE INDEX idx_usuario_lesiones_usuario ON usuario_lesiones(usuario_id);
 
 -- ============================================================
+-- ARTES MARCIALES QUE PRACTICA EL USUARIO
+-- ============================================================
+CREATE TABLE usuario_artes_marciales (
+  usuario_id      UUID    NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  arte_marcial_id INTEGER NOT NULL REFERENCES artes_marciales(id) ON DELETE CASCADE,
+  creado_en       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (usuario_id, arte_marcial_id)
+);
+CREATE INDEX idx_uam_usuario ON usuario_artes_marciales(usuario_id);
+
+-- ============================================================
 -- POSTS DE BLOG
 -- ============================================================
 
