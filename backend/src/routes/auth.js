@@ -9,29 +9,68 @@ router.post('/registro', [
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }),
   body('nombre').trim().notEmpty(),
+  body('rol').optional().isIn(['cliente', 'gimnasio']),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  const { email, password, nombre, apellidos } = req.body;
+  const {
+    email, password, nombre, apellidos,
+    rol = 'cliente',
+    // Campos extra para rol gimnasio
+    gimnasio_nombre, gimnasio_direccion, gimnasio_telefono, gimnasio_ciudad,
+  } = req.body;
+
+  if (rol === 'gimnasio' && !gimnasio_nombre?.trim()) {
+    return res.status(400).json({ error: 'El nombre del gimnasio es obligatorio' });
+  }
+
+  const client = await pool.connect();
   try {
-    const existe = await pool.query('SELECT id FROM usuarios WHERE email=$1', [email]);
+    await client.query('BEGIN');
+
+    const existe = await client.query('SELECT id FROM usuarios WHERE email=$1', [email]);
     if (existe.rows.length) return res.status(409).json({ error: 'Email ya registrado' });
 
     const hash = await bcrypt.hash(password, 12);
-    const { rows } = await pool.query(
-      `INSERT INTO usuarios (email, password_hash, nombre, apellidos)
-       VALUES ($1,$2,$3,$4) RETURNING id, email, nombre, rol`,
-      [email, hash, nombre, apellidos ?? null]
+    const { rows } = await client.query(
+      `INSERT INTO usuarios (email, password_hash, nombre, apellidos, rol)
+       VALUES ($1,$2,$3,$4,$5) RETURNING id, email, nombre, rol`,
+      [email, hash, nombre, apellidos ?? null, rol]
     );
     const user = rows[0];
+
+    // Si es gimnasio, crear el gimnasio asociado
+    if (rol === 'gimnasio') {
+      const slug = (gimnasio_nombre)
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+        .substring(0, 220);
+
+      // Ensure slug uniqueness
+      const slugFinal = `${slug}-${Date.now().toString(36)}`;
+
+      await client.query(
+        `INSERT INTO gimnasios (propietario_id, nombre, slug, direccion, telefono, ciudad)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [user.id, gimnasio_nombre.trim(), slugFinal,
+         gimnasio_direccion ?? null, gimnasio_telefono ?? null, gimnasio_ciudad ?? null]
+      );
+    }
+
+    await client.query('COMMIT');
+
     const token = jwt.sign({ id: user.id, rol: user.rol }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN,
     });
     res.status(201).json({ token, user });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error(err);
     res.status(500).json({ error: 'Error interno' });
+  } finally {
+    client.release();
   }
 });
 
