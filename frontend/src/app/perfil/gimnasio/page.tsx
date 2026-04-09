@@ -9,7 +9,7 @@ import type { Gimnasio, ArteMarcial } from '@/types';
 
 interface GimnasioConArtes extends Gimnasio {
   arte_ids?: number[];
-  horario?: Record<string, string> | null;
+  horario?: Record<string, string>;
 }
 
 interface Contacto {
@@ -105,7 +105,7 @@ export default function PerfilGimnasioPage() {
         precio_desde:   gymData.precio_desde != null ? String(gymData.precio_desde) : '',
       });
       setArteSel(gymData.arte_ids ?? []);
-      setHorario(gymData.horario ?? {});
+      setHorario(gymData.horario ?? {} as Record<string, string>);
 
       api.get<Contacto[]>(`/contactos?gimnasio_id=${gymData.id}`, token)
         .then(setContactos).catch(() => {});
