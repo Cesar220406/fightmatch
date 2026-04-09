@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import ArteCard from '@/components/ArteCard';
@@ -26,7 +26,7 @@ function SearchIcon() {
   );
 }
 
-export default function BuscarPage() {
+function BuscarContent() {
   const searchParams = useSearchParams();
   const ciudadParam  = searchParams.get('ciudad') ?? '';
   const lesionParam  = searchParams.get('lesion') ?? '';
@@ -337,5 +337,17 @@ export default function BuscarPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BuscarPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <p className="text-xs text-[#888888] uppercase tracking-widest">Cargando...</p>
+      </div>
+    }>
+      <BuscarContent />
+    </Suspense>
   );
 }
