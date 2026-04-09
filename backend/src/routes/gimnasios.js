@@ -2,12 +2,20 @@ const router = require('express').Router();
 const pool = require('../db/pool');
 const { auth, requireRol } = require('../middleware/auth');
 
-// GET /api/gimnasios — listado con filtros opcionales
+// GET /api/gimnasios — listado con filtros opcionales (incluye geolocalización Haversine)
 router.get('/', async (req, res) => {
-  const { ciudad, arte, lesion_id, page = 1, limit = 20 } = req.query;
+  const { ciudad, arte, lesion_id, page = 1, limit = 20, lat, lng, radio_km } = req.query;
   const offset = (page - 1) * limit;
   const params = [];
   const conditions = ['g.activo = TRUE'];
+
+  const useGeo = lat && lng && radio_km && Number(radio_km) > 0
+    && !isNaN(Number(lat)) && !isNaN(Number(lng));
+
+  if (useGeo) {
+    // Only include gyms that have coordinates
+    conditions.push('g.latitud IS NOT NULL AND g.longitud IS NOT NULL');
+  }
 
   if (ciudad) {
     params.push(`%${ciudad}%`);
@@ -22,7 +30,6 @@ router.get('/', async (req, res) => {
     )`);
   }
   if (lesion_id) {
-    // Support comma-separated list of lesion IDs — gym must have a compatible art for ALL of them
     const lesionIds = String(lesion_id).split(',').map(Number).filter(Boolean);
     if (lesionIds.length === 1) {
       params.push(lesionIds[0]);
@@ -46,19 +53,44 @@ router.get('/', async (req, res) => {
   }
 
   const where = conditions.join(' AND ');
+
+  // Haversine distance expression
+  let distanciaExpr = 'NULL::numeric';
+  let havingClause = '';
+  if (useGeo) {
+    params.push(Number(lat), Number(lng));
+    const pLat = params.length - 1;
+    const pLng = params.length;
+    distanciaExpr = `ROUND((6371 * 2 * ASIN(SQRT(
+      POWER(SIN((RADIANS($${pLat}) - RADIANS(g.latitud)) / 2), 2) +
+      COS(RADIANS($${pLat})) * COS(RADIANS(g.latitud)) *
+      POWER(SIN((RADIANS($${pLng}) - RADIANS(g.longitud)) / 2), 2)
+    )))::numeric, 1)`;
+    params.push(Number(radio_km));
+    const pRadio = params.length;
+    havingClause = `HAVING (6371 * 2 * ASIN(SQRT(
+      POWER(SIN((RADIANS($${pLat}) - RADIANS(g.latitud)) / 2), 2) +
+      COS(RADIANS($${pLat})) * COS(RADIANS(g.latitud)) *
+      POWER(SIN((RADIANS($${pLng}) - RADIANS(g.longitud)) / 2), 2)
+    ))) <= $${pRadio}`;
+  }
+
   params.push(Number(limit), Number(offset));
+  const orderBy = useGeo ? distanciaExpr : 'g.verificado DESC, g.nombre ASC';
 
   try {
     const { rows } = await pool.query(
       `SELECT g.id, g.nombre, g.slug, g.ciudad, g.provincia,
-              g.imagen_url, g.precio_desde, g.verificado,
-              array_agg(DISTINCT am.nombre) FILTER (WHERE am.nombre IS NOT NULL) AS artes
+              g.imagen_url, g.precio_desde, g.verificado, g.latitud, g.longitud,
+              array_agg(DISTINCT am.nombre) FILTER (WHERE am.nombre IS NOT NULL) AS artes,
+              ${distanciaExpr} AS distancia_km
        FROM gimnasios g
        LEFT JOIN gimnasio_artes_marciales gam ON gam.gimnasio_id = g.id
        LEFT JOIN artes_marciales am ON am.id = gam.arte_marcial_id
        WHERE ${where}
        GROUP BY g.id
-       ORDER BY g.verificado DESC, g.nombre ASC
+       ${havingClause}
+       ORDER BY ${orderBy}
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
     );

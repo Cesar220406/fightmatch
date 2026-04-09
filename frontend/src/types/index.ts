@@ -65,6 +65,7 @@ export interface Gimnasio {
   email_contacto?: string;
   sitio_web?: string;
   horario?: Record<string, string>;
+  distancia_km?: number;
 }
 
 export interface Post {

@@ -126,6 +126,33 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
                 </div>
               </div>
             )}
+
+            {/* Mapa */}
+            {(g.latitud && g.longitud) || g.direccion ? (
+              <div>
+                <h2 className="font-display text-xl text-white uppercase tracking-wide mb-4">Cómo llegar</h2>
+                <div className="overflow-hidden border border-[#2a2a2a]" style={{ height: '280px' }}>
+                  <iframe
+                    title={`Mapa de ${g.nombre}`}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg)' }}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    src={
+                      g.latitud && g.longitud
+                        ? `https://maps.google.com/maps?q=${g.latitud},${g.longitud}&hl=es&z=15&output=embed`
+                        : `https://maps.google.com/maps?q=${encodeURIComponent(`${g.direccion ?? ''} ${g.ciudad ?? ''}`.trim())}&hl=es&z=15&output=embed`
+                    }
+                  />
+                </div>
+                {g.direccion && (
+                  <p className="text-xs text-[#555555] mt-2">
+                    {g.direccion}{g.ciudad ? `, ${g.ciudad}` : ''}
+                  </p>
+                )}
+              </div>
+            ) : null}
           </div>
 
           {/* Sidebar */}

@@ -70,6 +70,11 @@ export default function GimnasioCard({ g }: { g: Gimnasio }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             {g.ciudad}{g.provincia ? `, ${g.provincia}` : ''}
+            {g.distancia_km != null && (
+              <span className="ml-2 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[#c41e1e]/10 text-[#c41e1e] border border-[#c41e1e]/20">
+                a {g.distancia_km} km
+              </span>
+            )}
           </p>
         )}
 
