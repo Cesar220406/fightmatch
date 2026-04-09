@@ -267,3 +267,18 @@ CREATE TABLE contactos (
 
 CREATE INDEX idx_contactos_gimnasio ON contactos(gimnasio_id);
 CREATE INDEX idx_contactos_leido    ON contactos(leido);
+
+-- ============================================================
+-- GIMNASIO_TRABAJADORES (equipo del gimnasio)
+-- ============================================================
+
+CREATE TABLE gimnasio_trabajadores (
+    gimnasio_id UUID        NOT NULL REFERENCES gimnasios(id) ON DELETE CASCADE,
+    usuario_id  UUID        NOT NULL REFERENCES usuarios(id)  ON DELETE CASCADE,
+    rol_equipo  VARCHAR(50) NOT NULL DEFAULT 'entrenador',
+    creado_en   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (gimnasio_id, usuario_id)
+);
+
+CREATE INDEX idx_gt_gimnasio ON gimnasio_trabajadores(gimnasio_id);
+CREATE INDEX idx_gt_usuario  ON gimnasio_trabajadores(usuario_id);

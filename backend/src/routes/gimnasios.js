@@ -91,6 +91,143 @@ router.get('/mio', auth, async (req, res) => {
   }
 });
 
+// GET /api/gimnasios/mio/clientes — usuarios que han añadido el gimnasio a favoritos
+router.get('/mio/clientes', auth, async (req, res) => {
+  try {
+    const { rows: gymRows } = await pool.query(
+      'SELECT id FROM gimnasios WHERE propietario_id=$1 AND activo=TRUE LIMIT 1',
+      [req.user.id]
+    );
+    if (!gymRows[0]) return res.status(404).json({ error: 'No tienes ningún gimnasio' });
+    const { rows } = await pool.query(
+      `SELECT u.id, u.nombre, u.apellidos, u.email, u.avatar_url, f.creado_en AS desde
+       FROM favoritos f
+       JOIN usuarios u ON u.id = f.usuario_id
+       WHERE f.gimnasio_id = $1
+       ORDER BY f.creado_en DESC`,
+      [gymRows[0].id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// GET /api/gimnasios/mio/equipo — trabajadores del gimnasio
+router.get('/mio/equipo', auth, async (req, res) => {
+  try {
+    const { rows: gymRows } = await pool.query(
+      'SELECT id FROM gimnasios WHERE propietario_id=$1 AND activo=TRUE LIMIT 1',
+      [req.user.id]
+    );
+    if (!gymRows[0]) return res.status(404).json({ error: 'No tienes ningún gimnasio' });
+    const { rows } = await pool.query(
+      `SELECT u.id, u.nombre, u.apellidos, u.email, u.avatar_url, gt.rol_equipo, gt.creado_en
+       FROM gimnasio_trabajadores gt
+       JOIN usuarios u ON u.id = gt.usuario_id
+       WHERE gt.gimnasio_id = $1
+       ORDER BY gt.creado_en ASC`,
+      [gymRows[0].id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// POST /api/gimnasios/mio/equipo — añadir trabajador por email
+router.post('/mio/equipo', auth, async (req, res) => {
+  const { email, rol_equipo = 'entrenador' } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email requerido' });
+  try {
+    const { rows: gymRows } = await pool.query(
+      'SELECT id FROM gimnasios WHERE propietario_id=$1 AND activo=TRUE LIMIT 1',
+      [req.user.id]
+    );
+    if (!gymRows[0]) return res.status(404).json({ error: 'No tienes ningún gimnasio' });
+    const { rows: userRows } = await pool.query(
+      'SELECT id, nombre, apellidos, email, avatar_url FROM usuarios WHERE email=$1 AND activo=TRUE',
+      [email]
+    );
+    if (!userRows[0]) return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (userRows[0].id === req.user.id) return res.status(400).json({ error: 'No puedes añadirte a ti mismo' });
+    await pool.query(
+      `INSERT INTO gimnasio_trabajadores (gimnasio_id, usuario_id, rol_equipo)
+       VALUES ($1,$2,$3) ON CONFLICT (gimnasio_id, usuario_id) DO UPDATE SET rol_equipo=$3`,
+      [gymRows[0].id, userRows[0].id, rol_equipo]
+    );
+    res.status(201).json({ ...userRows[0], rol_equipo });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// DELETE /api/gimnasios/mio/equipo/:userId — eliminar trabajador
+router.delete('/mio/equipo/:userId', auth, async (req, res) => {
+  try {
+    const { rows: gymRows } = await pool.query(
+      'SELECT id FROM gimnasios WHERE propietario_id=$1 AND activo=TRUE LIMIT 1',
+      [req.user.id]
+    );
+    if (!gymRows[0]) return res.status(404).json({ error: 'No tienes ningún gimnasio' });
+    await pool.query(
+      'DELETE FROM gimnasio_trabajadores WHERE gimnasio_id=$1 AND usuario_id=$2',
+      [gymRows[0].id, req.params.userId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// GET /api/gimnasios/mio/estadisticas — métricas del gimnasio
+router.get('/mio/estadisticas', auth, async (req, res) => {
+  try {
+    const { rows: gymRows } = await pool.query(
+      'SELECT id FROM gimnasios WHERE propietario_id=$1 AND activo=TRUE LIMIT 1',
+      [req.user.id]
+    );
+    if (!gymRows[0]) return res.status(404).json({ error: 'No tienes ningún gimnasio' });
+    const gid = gymRows[0].id;
+
+    const [total, nuevos, artes, mensajesSinLeer] = await Promise.all([
+      pool.query('SELECT COUNT(*) AS total FROM favoritos WHERE gimnasio_id=$1', [gid]),
+      pool.query(
+        `SELECT COUNT(*) AS total FROM favoritos
+         WHERE gimnasio_id=$1 AND creado_en >= date_trunc('month', NOW())`,
+        [gid]
+      ),
+      pool.query(
+        `SELECT am.nombre, COUNT(DISTINCT f.usuario_id) AS fans
+         FROM gimnasio_artes_marciales gam
+         JOIN artes_marciales am ON am.id = gam.arte_marcial_id
+         LEFT JOIN usuario_artes_marciales uam ON uam.arte_marcial_id = gam.arte_marcial_id
+         LEFT JOIN favoritos f ON f.usuario_id = uam.usuario_id AND f.gimnasio_id = $1
+         WHERE gam.gimnasio_id = $1
+         GROUP BY am.nombre
+         ORDER BY fans DESC
+         LIMIT 5`,
+        [gid]
+      ),
+      pool.query('SELECT COUNT(*) AS total FROM contactos WHERE gimnasio_id=$1 AND leido=FALSE', [gid]),
+    ]);
+
+    res.json({
+      clientes_total:      Number(total.rows[0].total),
+      clientes_este_mes:   Number(nuevos.rows[0].total),
+      artes_populares:     artes.rows,
+      mensajes_sin_leer:   Number(mensajesSinLeer.rows[0].total),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 // GET /api/gimnasios/:slug
 router.get('/:slug', async (req, res) => {
   try {
@@ -154,21 +291,24 @@ router.put('/:id/artes', auth, requireRol('admin', 'gimnasio'), async (req, res)
 router.put('/:id', auth, requireRol('admin', 'gimnasio'), async (req, res) => {
   const { nombre, slug, descripcion, direccion, ciudad, provincia,
           codigo_postal, telefono, email_contacto, sitio_web, imagen_url,
-          precio_desde, verificado } = req.body;
+          precio_desde, verificado, horario } = req.body;
   try {
     const { rows } = await pool.query(
       `UPDATE gimnasios
        SET nombre=$1, slug=$2, descripcion=$3, direccion=$4, ciudad=$5, provincia=$6,
            codigo_postal=$7, telefono=$8, email_contacto=$9, sitio_web=$10,
-           imagen_url=$11, precio_desde=$12, verificado=COALESCE($13, verificado)
+           imagen_url=$11, precio_desde=$12, verificado=COALESCE($13, verificado),
+           horario=COALESCE($15::jsonb, horario)
        WHERE id=$14 RETURNING *`,
       [nombre, slug, descripcion, direccion, ciudad, provincia,
        codigo_postal, telefono, email_contacto, sitio_web,
-       imagen_url, precio_desde, verificado, req.params.id]
+       imagen_url, precio_desde, verificado, req.params.id,
+       horario ? JSON.stringify(horario) : null]
     );
     if (!rows[0]) return res.status(404).json({ error: 'No encontrado' });
     res.json(rows[0]);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error interno' });
   }
 });
