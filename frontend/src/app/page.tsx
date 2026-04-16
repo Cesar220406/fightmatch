@@ -8,17 +8,20 @@ import SectionDivider from '@/components/SectionDivider';
 import { api } from '@/lib/api';
 import type { Lesion, ArteMarcial, Gimnasio } from '@/types';
 
+interface Stats { gimnasios: number; artes: number; usuarios: number; posts: number; }
+
 async function getData() {
-  const [lesiones, artes, gimnasios] = await Promise.all([
+  const [lesiones, artes, gimnasios, stats] = await Promise.all([
     api.get<Lesion[]>('/lesiones').catch(() => [] as Lesion[]),
     api.get<ArteMarcial[]>('/artes-marciales').catch(() => [] as ArteMarcial[]),
     api.get<Gimnasio[]>('/gimnasios?limit=3').catch(() => [] as Gimnasio[]),
+    api.get<Stats>('/stats').catch(() => ({ gimnasios: 0, artes: 0, usuarios: 0, posts: 0 })),
   ]);
-  return { lesiones, artes, gimnasios };
+  return { lesiones, artes, gimnasios, stats };
 }
 
 export default async function Home() {
-  const { lesiones, artes, gimnasios } = await getData();
+  const { lesiones, artes, gimnasios, stats } = await getData();
 
   return (
     <>
@@ -70,7 +73,11 @@ export default async function Home() {
               {/* Stats */}
               <div className="flex flex-wrap gap-10 pt-2">
                 <div>
-                  <p className="stat-number">{artes.length}</p>
+                  <p className="stat-number">{stats.gimnasios || gimnasios.length}</p>
+                  <p className="text-xs text-[#888888] uppercase tracking-widest mt-1">Gimnasios</p>
+                </div>
+                <div>
+                  <p className="stat-number">{stats.artes || artes.length}</p>
                   <p className="text-xs text-[#888888] uppercase tracking-widest mt-1">Artes marciales</p>
                 </div>
                 <div>

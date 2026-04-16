@@ -9,5 +9,6 @@ router.use('/compatibilidades',require('./compatibilidades'));
 router.use('/posts',          require('./posts'));
 router.use('/favoritos',      require('./favoritos'));
 router.use('/contactos',      require('./contactos'));
+router.use('/stats',          require('./stats'));
 
 module.exports = router;

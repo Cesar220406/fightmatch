@@ -75,7 +75,10 @@ export default function Nav() {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
-              <Link href="/perfil" className="flex items-center gap-2 text-sm text-[#888888] hover:text-[#d4a017] transition-colors">
+              <Link
+                href={user.rol === 'gimnasio' ? '/perfil/gimnasio' : '/perfil'}
+                className="flex items-center gap-2 text-sm text-[#888888] hover:text-[#d4a017] transition-colors"
+              >
                 <div className="h-7 w-7 bg-[#c41e1e] flex items-center justify-center text-xs font-bold text-white">
                   {user.nombre[0].toUpperCase()}
                 </div>
@@ -139,7 +142,7 @@ export default function Nav() {
             {user ? (
               <>
                 <Link
-                  href="/perfil"
+                  href={user?.rol === 'gimnasio' ? '/perfil/gimnasio' : '/perfil'}
                   className="btn-secondary py-2 px-4 text-xs flex-1 text-center"
                   onClick={() => setOpen(false)}
                 >

@@ -92,15 +92,12 @@ export default function PerfilPage() {
     </div>
   );
 
-  // Redirect gym owners to their panel
+  // Redirect gym owners to their dedicated panel
   if (user.rol === 'gimnasio') {
+    router.replace('/perfil/gimnasio');
     return (
-      <div className="py-14">
-        <div className="page-container max-w-2xl text-center">
-          <p className="font-display text-5xl text-white uppercase mb-4">Tu panel</p>
-          <p className="text-sm text-[#888888] mb-8">Como propietario de gimnasio tienes un panel dedicado.</p>
-          <Link href="/perfil/gimnasio" className="btn-primary">Ir a mi gimnasio →</Link>
-        </div>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <p className="text-xs text-[#888888] uppercase tracking-widest">Redirigiendo...</p>
       </div>
     );
   }
