@@ -75,6 +75,9 @@ export default function PerfilPage() {
     try {
       await api.delete(`/favoritos/${gimnasioId}`, localStorage.getItem('token') ?? '');
       setFavoritos(prev => prev.filter(g => g.id !== gimnasioId));
+      // Sync cache so FavoritoBtn reflects the change instantly
+      const { removeFavorito } = await import('@/lib/favoritosCache');
+      removeFavorito(gimnasioId);
       toast.success('Gimnasio eliminado de favoritos');
     } catch { toast.error('Error al eliminar'); }
   }

@@ -6,9 +6,10 @@ const BASE_URL =
     : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const { headers: optHeaders, ...restOptions } = options;
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
+    headers: { 'Content-Type': 'application/json', ...(optHeaders as Record<string, string>) },
+    ...restOptions,
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

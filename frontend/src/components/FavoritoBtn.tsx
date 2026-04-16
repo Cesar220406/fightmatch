@@ -4,17 +4,20 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { getToken } from '@/lib/auth';
+import { getFavoritosIds, addFavorito, removeFavorito } from '@/lib/favoritosCache';
 
 export default function FavoritoBtn({ gimnasioId }: { gimnasioId: string }) {
   const [favorito, setFavorito] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [checked, setChecked]   = useState(false);
 
   useEffect(() => {
     const token = getToken();
-    if (!token) return;
-    api.get<string[]>('/favoritos/ids', token)
-      .then((ids) => setFavorito(ids.includes(gimnasioId)))
-      .catch(() => {});
+    if (!token) { setChecked(true); return; }
+    getFavoritosIds(token).then((ids) => {
+      setFavorito(ids.has(gimnasioId));
+      setChecked(true);
+    });
   }, [gimnasioId]);
 
   async function toggle(e: React.MouseEvent) {
@@ -29,10 +32,12 @@ export default function FavoritoBtn({ gimnasioId }: { gimnasioId: string }) {
     try {
       if (favorito) {
         await api.delete(`/favoritos/${gimnasioId}`, token);
+        removeFavorito(gimnasioId);
         setFavorito(false);
         toast.success('Eliminado de favoritos');
       } else {
         await api.post('/favoritos', { gimnasio_id: gimnasioId }, token);
+        addFavorito(gimnasioId);
         setFavorito(true);
         toast.success('Guardado en favoritos');
       }
@@ -41,6 +46,13 @@ export default function FavoritoBtn({ gimnasioId }: { gimnasioId: string }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  // No renderizar nada hasta saber el estado real (evita parpadeo)
+  if (!checked) {
+    return (
+      <span className="w-5 h-5 shrink-0" aria-hidden="true" />
+    );
   }
 
   return (
@@ -52,7 +64,8 @@ export default function FavoritoBtn({ gimnasioId }: { gimnasioId: string }) {
       aria-label={favorito ? 'Quitar favorito' : 'Añadir favorito'}
     >
       <svg
-        width="20" height="20" viewBox="0 0 24 24" fill={favorito ? '#d4a017' : 'none'}
+        width="20" height="20" viewBox="0 0 24 24"
+        fill={favorito ? '#d4a017' : 'none'}
         stroke={favorito ? '#d4a017' : '#444444'}
         strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
       >
