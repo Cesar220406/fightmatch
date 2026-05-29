@@ -51,7 +51,7 @@ export default function LoginPage() {
             <span className="text-[#c41e1e]">Fight</span>Match
           </span>
           <div className="mt-4 h-px" style={{ background: 'linear-gradient(90deg, transparent, #d4a017, transparent)' }} />
-          <p className="mt-4 text-xs text-[#888888] uppercase tracking-widest">Accede a tu cuenta</p>
+          <p className="mt-4 text-xs text-[#888888] uppercase tracking-widest">Nos alegramos de verte</p>
         </div>
 
         <form onSubmit={onSubmit} className="card space-y-5">
@@ -92,9 +92,9 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-xs text-[#888888] uppercase tracking-widest">
-          ¿No tienes cuenta?{' '}
+          ¿Primera vez?{' '}
           <Link href="/auth/registro" className="text-[#d4a017] hover:text-[#e8b520] font-semibold transition-colors">
-            Regístrate
+            Crea tu cuenta — es gratis
           </Link>
         </p>
       </div>

@@ -31,7 +31,8 @@ export default function RegistroPage() {
       localStorage.setItem('token', (data as { token: string }).token);
       localStorage.setItem('user', JSON.stringify((data as { user: object }).user));
       toast.success('Cuenta creada correctamente');
-      router.push('/perfil');
+      // New clients go through onboarding; gym owners straight to their panel
+      router.push(rol === 'gimnasio' ? '/perfil/gimnasio' : '/onboarding');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al registrarse');
     } finally {
@@ -53,14 +54,14 @@ export default function RegistroPage() {
             <span className="text-[#c41e1e]">Fight</span>Match
           </span>
           <div className="mt-4 h-px" style={{ background: 'linear-gradient(90deg, transparent, #d4a017, transparent)' }} />
-          <p className="mt-4 text-xs text-[#888888] uppercase tracking-widest">Crea tu cuenta gratis</p>
+          <p className="mt-4 text-xs text-[#888888] uppercase tracking-widest">30 segundos. Sin tarjeta.</p>
         </div>
 
         {/* PASO 1 — Elegir tipo */}
         {!rol && (
           <div className="space-y-4">
             <p className="text-center text-xs text-[#888888] uppercase tracking-widest mb-6">
-              ¿Cómo vas a usar FightMatch?
+              ¿Eres deportista o tienes un gimnasio?
             </p>
             <div className="grid grid-cols-2 gap-4">
               {/* Deportista */}
@@ -81,7 +82,7 @@ export default function RegistroPage() {
                 </div>
                 <div className="text-center">
                   <p className="font-display text-xl text-white uppercase tracking-widest">Soy deportista</p>
-                  <p className="text-xs text-[#666666] mt-2 leading-relaxed">Busco artes marciales y gimnasios adaptados a mis lesiones</p>
+                  <p className="text-xs text-[#666666] mt-2 leading-relaxed">Quiero entrenar sin romperme nada más de lo que ya tengo</p>
                 </div>
                 <div className="absolute top-3 right-3 w-2 h-2 bg-[#c41e1e] opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
@@ -104,7 +105,7 @@ export default function RegistroPage() {
                 </div>
                 <div className="text-center">
                   <p className="font-display text-xl text-white uppercase tracking-widest">Tengo un gimnasio</p>
-                  <p className="text-xs text-[#666666] mt-2 leading-relaxed">Gestiono un gimnasio y quiero llegar a más deportistas</p>
+                  <p className="text-xs text-[#666666] mt-2 leading-relaxed">Tengo un gimnasio y quiero que me encuentren los que me necesitan</p>
                 </div>
                 <div className="absolute top-3 right-3 w-2 h-2 bg-[#d4a017] opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>

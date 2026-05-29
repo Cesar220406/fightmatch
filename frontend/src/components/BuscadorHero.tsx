@@ -35,7 +35,7 @@ export default function BuscadorHero({ lesiones }: { lesiones: Lesion[] }) {
       {/* Ciudad */}
       <div>
         <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-2">
-          ¿En qué ciudad estás?
+          ¿En qué ciudad?
         </label>
         <input
           type="text"
@@ -49,8 +49,8 @@ export default function BuscadorHero({ lesiones }: { lesiones: Lesion[] }) {
       {/* Lesiones */}
       <div>
         <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-3">
-          ¿Tienes alguna lesión?{' '}
-          <span className="text-[#444444] font-normal normal-case tracking-normal">(opcional)</span>
+          ¿Qué zona tienes fastidiada?{' '}
+          <span className="text-[#444444] font-normal normal-case tracking-normal">(si tienes algo, cuéntanos)</span>
         </label>
 
         <div className="space-y-4 max-h-64 overflow-y-auto pr-1">
@@ -84,7 +84,7 @@ export default function BuscadorHero({ lesiones }: { lesiones: Lesion[] }) {
 
       {seleccionadas.length > 0 && (
         <p className="text-xs text-[#d4a017] font-medium">
-          ✓ {seleccionadas.length} lesión{seleccionadas.length > 1 ? 'es' : ''} seleccionada{seleccionadas.length > 1 ? 's' : ''}
+          ✓ Anotado — {seleccionadas.length} {seleccionadas.length > 1 ? 'zonas' : 'zona'} a tener en cuenta
         </p>
       )}
 
@@ -97,7 +97,7 @@ export default function BuscadorHero({ lesiones }: { lesiones: Lesion[] }) {
           <path d="M 8 4 C 7 7 8 10 10 12" stroke="#c41e1e" strokeWidth="0.8" fill="none" opacity="0.8"/>
         </svg>
 
-        <span className="uppercase tracking-widest font-semibold">Buscar gimnasios</span>
+        <span className="uppercase tracking-widest font-semibold">Buscar mi sitio</span>
 
         {/* Right claw (flipped) */}
         <svg width="18" height="20" viewBox="0 0 18 20" fill="none" className="shrink-0 opacity-70 group-hover/btn:opacity-100 transition-opacity scale-x-[-1]" aria-hidden="true">

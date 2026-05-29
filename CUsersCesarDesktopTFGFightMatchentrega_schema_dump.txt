@@ -1,0 +1,1346 @@
+--
+-- PostgreSQL database dump
+--
+
+\restrict JXnlTF6I8IoPs4ZsuhFxmkVWf6wofcQgiKHsQ4NCD415VlbEUgXxAQuikhMSDqF
+
+-- Dumped from database version 16.13
+-- Dumped by pg_dump version 16.13
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: unaccent; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
+
+
+--
+-- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
+--
+-- Name: estado_publicacion; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.estado_publicacion AS ENUM (
+    'borrador',
+    'publicado',
+    'archivado'
+);
+
+
+--
+-- Name: nivel_experiencia; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.nivel_experiencia AS ENUM (
+    'principiante',
+    'intermedio',
+    'avanzado'
+);
+
+
+--
+-- Name: rol_usuario; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.rol_usuario AS ENUM (
+    'admin',
+    'gimnasio',
+    'cliente',
+    'editor'
+);
+
+
+--
+-- Name: severidad_lesion; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.severidad_lesion AS ENUM (
+    'leve',
+    'moderada',
+    'grave'
+);
+
+
+--
+-- Name: set_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.actualizado_en = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: artes_marciales; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.artes_marciales (
+    id integer NOT NULL,
+    nombre character varying(100) NOT NULL,
+    slug character varying(120) NOT NULL,
+    descripcion text,
+    imagen_url text,
+    impacto_fisico text,
+    activo boolean DEFAULT true NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: artes_marciales_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.artes_marciales_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: artes_marciales_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.artes_marciales_id_seq OWNED BY public.artes_marciales.id;
+
+
+--
+-- Name: clases; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.clases (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    gimnasio_id uuid NOT NULL,
+    nombre character varying(200) NOT NULL,
+    instructor character varying(100),
+    arte_marcial character varying(100),
+    dia_semana integer NOT NULL,
+    hora_inicio time without time zone NOT NULL,
+    hora_fin time without time zone NOT NULL,
+    aforo_max integer DEFAULT 20,
+    activa boolean DEFAULT true NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT clases_dia_semana_check CHECK (((dia_semana >= 0) AND (dia_semana <= 6)))
+);
+
+
+--
+-- Name: compatibilidades; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.compatibilidades (
+    id integer NOT NULL,
+    arte_marcial_id integer NOT NULL,
+    lesion_id integer NOT NULL,
+    compatible boolean NOT NULL,
+    nivel_recomendado public.nivel_experiencia,
+    notas text,
+    creado_por uuid,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL,
+    actualizado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: compatibilidades_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.compatibilidades_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: compatibilidades_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.compatibilidades_id_seq OWNED BY public.compatibilidades.id;
+
+
+--
+-- Name: contactos; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.contactos (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    gimnasio_id uuid NOT NULL,
+    nombre character varying(150) NOT NULL,
+    email character varying(255) NOT NULL,
+    mensaje text NOT NULL,
+    leido boolean DEFAULT false NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.events (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tipo character varying(100) NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: favoritos; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.favoritos (
+    usuario_id uuid NOT NULL,
+    gimnasio_id uuid NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: gimnasio_artes_marciales; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.gimnasio_artes_marciales (
+    gimnasio_id uuid NOT NULL,
+    arte_marcial_id integer NOT NULL
+);
+
+
+--
+-- Name: gimnasio_trabajadores; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.gimnasio_trabajadores (
+    gimnasio_id uuid NOT NULL,
+    usuario_id uuid NOT NULL,
+    rol_equipo character varying(50) DEFAULT 'entrenador'::character varying NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: gimnasios; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.gimnasios (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    propietario_id uuid NOT NULL,
+    nombre character varying(200) NOT NULL,
+    slug character varying(220) NOT NULL,
+    descripcion text,
+    direccion character varying(300),
+    ciudad character varying(100),
+    provincia character varying(100),
+    codigo_postal character varying(10),
+    pais character varying(100) DEFAULT 'España'::character varying NOT NULL,
+    latitud numeric(10,8),
+    longitud numeric(11,8),
+    telefono character varying(20),
+    email_contacto character varying(255),
+    sitio_web text,
+    imagen_url text,
+    imagenes text[],
+    horario jsonb,
+    precio_desde numeric(8,2),
+    verificado boolean DEFAULT false NOT NULL,
+    activo boolean DEFAULT true NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL,
+    actualizado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: lesiones; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.lesiones (
+    id integer NOT NULL,
+    nombre character varying(150) NOT NULL,
+    slug character varying(170) NOT NULL,
+    descripcion text,
+    zona_corporal character varying(100),
+    severidad public.severidad_lesion DEFAULT 'leve'::public.severidad_lesion NOT NULL,
+    activo boolean DEFAULT true NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: lesiones_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.lesiones_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: lesiones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.lesiones_id_seq OWNED BY public.lesiones.id;
+
+
+--
+-- Name: noticias; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.noticias (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    slug character varying(200) NOT NULL,
+    titulo character varying(300) NOT NULL,
+    subtitulo character varying(400),
+    contenido text NOT NULL,
+    resumen character varying(500),
+    imagen_url character varying(500),
+    imagen_alt character varying(200),
+    categoria character varying(60) NOT NULL,
+    autor character varying(100) DEFAULT 'Redaccion FightMatch'::character varying,
+    publicado boolean DEFAULT false,
+    destacada boolean DEFAULT false,
+    fecha_publicacion timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone DEFAULT now(),
+    views integer DEFAULT 0
+);
+
+
+--
+-- Name: notificaciones; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notificaciones (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    usuario_id uuid NOT NULL,
+    tipo character varying(50) NOT NULL,
+    titulo character varying(200) NOT NULL,
+    mensaje text NOT NULL,
+    leida boolean DEFAULT false NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: pagos; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pagos (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    suscripcion_id uuid NOT NULL,
+    importe numeric(10,2) NOT NULL,
+    estado character varying(20) DEFAULT 'pagado'::character varying NOT NULL,
+    fecha_pago timestamp with time zone DEFAULT now() NOT NULL,
+    concepto character varying(200),
+    CONSTRAINT pagos_estado_check CHECK (((estado)::text = ANY ((ARRAY['pagado'::character varying, 'pendiente'::character varying, 'fallido'::character varying])::text[])))
+);
+
+
+--
+-- Name: planes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.planes (
+    id integer NOT NULL,
+    nombre character varying(100) NOT NULL,
+    precio numeric(10,2) NOT NULL,
+    descripcion text,
+    activo boolean DEFAULT true NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: planes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.planes_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: planes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.planes_id_seq OWNED BY public.planes.id;
+
+
+--
+-- Name: post_artes_marciales; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.post_artes_marciales (
+    post_id uuid NOT NULL,
+    arte_marcial_id integer NOT NULL
+);
+
+
+--
+-- Name: post_etiquetas; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.post_etiquetas (
+    post_id uuid NOT NULL,
+    etiqueta character varying(80) NOT NULL
+);
+
+
+--
+-- Name: posts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.posts (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    autor_id uuid NOT NULL,
+    titulo character varying(300) NOT NULL,
+    slug character varying(320) NOT NULL,
+    resumen character varying(500),
+    contenido text NOT NULL,
+    imagen_portada text,
+    estado public.estado_publicacion DEFAULT 'borrador'::public.estado_publicacion NOT NULL,
+    publicado_en timestamp with time zone,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL,
+    actualizado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: reviews; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.reviews (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    gimnasio_id uuid NOT NULL,
+    usuario_id uuid NOT NULL,
+    puntuacion smallint NOT NULL,
+    comentario text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT reviews_puntuacion_check CHECK (((puntuacion >= 1) AND (puntuacion <= 5)))
+);
+
+
+--
+-- Name: suscripciones; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.suscripciones (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    usuario_id uuid NOT NULL,
+    gimnasio_id uuid NOT NULL,
+    plan_id integer NOT NULL,
+    estado character varying(20) DEFAULT 'activa'::character varying NOT NULL,
+    fecha_inicio date DEFAULT CURRENT_DATE NOT NULL,
+    fecha_fin date NOT NULL,
+    precio_pagado numeric(10,2) NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT suscripciones_estado_check CHECK (((estado)::text = ANY ((ARRAY['activa'::character varying, 'pausada'::character varying, 'cancelada'::character varying, 'vencida'::character varying])::text[])))
+);
+
+
+--
+-- Name: usuario_artes_marciales; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.usuario_artes_marciales (
+    usuario_id uuid NOT NULL,
+    arte_marcial_id integer NOT NULL,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: usuario_lesiones; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.usuario_lesiones (
+    id integer NOT NULL,
+    usuario_id uuid NOT NULL,
+    lesion_id integer NOT NULL,
+    activa boolean DEFAULT true NOT NULL,
+    notas text,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: usuario_lesiones_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.usuario_lesiones_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: usuario_lesiones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.usuario_lesiones_id_seq OWNED BY public.usuario_lesiones.id;
+
+
+--
+-- Name: usuarios; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.usuarios (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    email character varying(255) NOT NULL,
+    password_hash character varying(255) NOT NULL,
+    nombre character varying(100) NOT NULL,
+    apellidos character varying(150),
+    rol public.rol_usuario DEFAULT 'cliente'::public.rol_usuario NOT NULL,
+    avatar_url text,
+    telefono character varying(20),
+    activo boolean DEFAULT true NOT NULL,
+    email_verificado boolean DEFAULT false NOT NULL,
+    token_verificacion character varying(255),
+    token_reset_password character varying(255),
+    token_reset_expira timestamp with time zone,
+    creado_en timestamp with time zone DEFAULT now() NOT NULL,
+    actualizado_en timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: artes_marciales id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artes_marciales ALTER COLUMN id SET DEFAULT nextval('public.artes_marciales_id_seq'::regclass);
+
+
+--
+-- Name: compatibilidades id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.compatibilidades ALTER COLUMN id SET DEFAULT nextval('public.compatibilidades_id_seq'::regclass);
+
+
+--
+-- Name: lesiones id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lesiones ALTER COLUMN id SET DEFAULT nextval('public.lesiones_id_seq'::regclass);
+
+
+--
+-- Name: planes id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.planes ALTER COLUMN id SET DEFAULT nextval('public.planes_id_seq'::regclass);
+
+
+--
+-- Name: usuario_lesiones id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario_lesiones ALTER COLUMN id SET DEFAULT nextval('public.usuario_lesiones_id_seq'::regclass);
+
+
+--
+-- Name: artes_marciales artes_marciales_nombre_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artes_marciales
+    ADD CONSTRAINT artes_marciales_nombre_key UNIQUE (nombre);
+
+
+--
+-- Name: artes_marciales artes_marciales_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artes_marciales
+    ADD CONSTRAINT artes_marciales_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: artes_marciales artes_marciales_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artes_marciales
+    ADD CONSTRAINT artes_marciales_slug_key UNIQUE (slug);
+
+
+--
+-- Name: clases clases_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clases
+    ADD CONSTRAINT clases_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: compatibilidades compatibilidades_arte_marcial_id_lesion_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.compatibilidades
+    ADD CONSTRAINT compatibilidades_arte_marcial_id_lesion_id_key UNIQUE (arte_marcial_id, lesion_id);
+
+
+--
+-- Name: compatibilidades compatibilidades_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.compatibilidades
+    ADD CONSTRAINT compatibilidades_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: contactos contactos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.contactos
+    ADD CONSTRAINT contactos_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: events events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.events
+    ADD CONSTRAINT events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: favoritos favoritos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favoritos
+    ADD CONSTRAINT favoritos_pkey PRIMARY KEY (usuario_id, gimnasio_id);
+
+
+--
+-- Name: gimnasio_artes_marciales gimnasio_artes_marciales_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gimnasio_artes_marciales
+    ADD CONSTRAINT gimnasio_artes_marciales_pkey PRIMARY KEY (gimnasio_id, arte_marcial_id);
+
+
+--
+-- Name: gimnasio_trabajadores gimnasio_trabajadores_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gimnasio_trabajadores
+    ADD CONSTRAINT gimnasio_trabajadores_pkey PRIMARY KEY (gimnasio_id, usuario_id);
+
+
+--
+-- Name: gimnasios gimnasios_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gimnasios
+    ADD CONSTRAINT gimnasios_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: gimnasios gimnasios_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gimnasios
+    ADD CONSTRAINT gimnasios_slug_key UNIQUE (slug);
+
+
+--
+-- Name: lesiones lesiones_nombre_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lesiones
+    ADD CONSTRAINT lesiones_nombre_key UNIQUE (nombre);
+
+
+--
+-- Name: lesiones lesiones_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lesiones
+    ADD CONSTRAINT lesiones_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: lesiones lesiones_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lesiones
+    ADD CONSTRAINT lesiones_slug_key UNIQUE (slug);
+
+
+--
+-- Name: noticias noticias_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.noticias
+    ADD CONSTRAINT noticias_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: noticias noticias_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.noticias
+    ADD CONSTRAINT noticias_slug_key UNIQUE (slug);
+
+
+--
+-- Name: notificaciones notificaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notificaciones
+    ADD CONSTRAINT notificaciones_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pagos pagos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pagos
+    ADD CONSTRAINT pagos_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: planes planes_nombre_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.planes
+    ADD CONSTRAINT planes_nombre_key UNIQUE (nombre);
+
+
+--
+-- Name: planes planes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.planes
+    ADD CONSTRAINT planes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: post_artes_marciales post_artes_marciales_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_artes_marciales
+    ADD CONSTRAINT post_artes_marciales_pkey PRIMARY KEY (post_id, arte_marcial_id);
+
+
+--
+-- Name: post_etiquetas post_etiquetas_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_etiquetas
+    ADD CONSTRAINT post_etiquetas_pkey PRIMARY KEY (post_id, etiqueta);
+
+
+--
+-- Name: posts posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: posts posts_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_slug_key UNIQUE (slug);
+
+
+--
+-- Name: reviews reviews_gimnasio_id_usuario_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_gimnasio_id_usuario_id_key UNIQUE (gimnasio_id, usuario_id);
+
+
+--
+-- Name: reviews reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: suscripciones suscripciones_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.suscripciones
+    ADD CONSTRAINT suscripciones_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: usuario_artes_marciales usuario_artes_marciales_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario_artes_marciales
+    ADD CONSTRAINT usuario_artes_marciales_pkey PRIMARY KEY (usuario_id, arte_marcial_id);
+
+
+--
+-- Name: usuario_lesiones usuario_lesiones_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario_lesiones
+    ADD CONSTRAINT usuario_lesiones_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: usuario_lesiones usuario_lesiones_usuario_id_lesion_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario_lesiones
+    ADD CONSTRAINT usuario_lesiones_usuario_id_lesion_id_key UNIQUE (usuario_id, lesion_id);
+
+
+--
+-- Name: usuarios usuarios_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuarios
+    ADD CONSTRAINT usuarios_email_key UNIQUE (email);
+
+
+--
+-- Name: usuarios usuarios_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuarios
+    ADD CONSTRAINT usuarios_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: clases_gimnasio_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX clases_gimnasio_idx ON public.clases USING btree (gimnasio_id);
+
+
+--
+-- Name: events_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX events_created_idx ON public.events USING btree (created_at DESC);
+
+
+--
+-- Name: events_tipo_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX events_tipo_idx ON public.events USING btree (tipo);
+
+
+--
+-- Name: idx_artes_marciales_slug; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_artes_marciales_slug ON public.artes_marciales USING btree (slug);
+
+
+--
+-- Name: idx_compatibilidades_arte; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_compatibilidades_arte ON public.compatibilidades USING btree (arte_marcial_id);
+
+
+--
+-- Name: idx_compatibilidades_compatible; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_compatibilidades_compatible ON public.compatibilidades USING btree (compatible);
+
+
+--
+-- Name: idx_compatibilidades_lesion; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_compatibilidades_lesion ON public.compatibilidades USING btree (lesion_id);
+
+
+--
+-- Name: idx_contactos_gimnasio; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_contactos_gimnasio ON public.contactos USING btree (gimnasio_id);
+
+
+--
+-- Name: idx_contactos_leido; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_contactos_leido ON public.contactos USING btree (leido);
+
+
+--
+-- Name: idx_gimnasios_ciudad; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gimnasios_ciudad ON public.gimnasios USING btree (ciudad);
+
+
+--
+-- Name: idx_gimnasios_propietario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gimnasios_propietario ON public.gimnasios USING btree (propietario_id);
+
+
+--
+-- Name: idx_gimnasios_slug; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gimnasios_slug ON public.gimnasios USING btree (slug);
+
+
+--
+-- Name: idx_gimnasios_ubicacion; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gimnasios_ubicacion ON public.gimnasios USING btree (latitud, longitud);
+
+
+--
+-- Name: idx_gt_gimnasio; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gt_gimnasio ON public.gimnasio_trabajadores USING btree (gimnasio_id);
+
+
+--
+-- Name: idx_gt_usuario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gt_usuario ON public.gimnasio_trabajadores USING btree (usuario_id);
+
+
+--
+-- Name: idx_lesiones_slug; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_lesiones_slug ON public.lesiones USING btree (slug);
+
+
+--
+-- Name: idx_lesiones_zona; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_lesiones_zona ON public.lesiones USING btree (zona_corporal);
+
+
+--
+-- Name: idx_posts_autor; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_posts_autor ON public.posts USING btree (autor_id);
+
+
+--
+-- Name: idx_posts_estado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_posts_estado ON public.posts USING btree (estado);
+
+
+--
+-- Name: idx_posts_publicado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_posts_publicado ON public.posts USING btree (publicado_en DESC);
+
+
+--
+-- Name: idx_posts_slug; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_posts_slug ON public.posts USING btree (slug);
+
+
+--
+-- Name: idx_uam_usuario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_uam_usuario ON public.usuario_artes_marciales USING btree (usuario_id);
+
+
+--
+-- Name: idx_usuario_lesiones_usuario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_usuario_lesiones_usuario ON public.usuario_lesiones USING btree (usuario_id);
+
+
+--
+-- Name: idx_usuarios_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_usuarios_email ON public.usuarios USING btree (email);
+
+
+--
+-- Name: idx_usuarios_rol; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_usuarios_rol ON public.usuarios USING btree (rol);
+
+
+--
+-- Name: noticias_cat_fecha_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX noticias_cat_fecha_idx ON public.noticias USING btree (categoria, fecha_publicacion DESC);
+
+
+--
+-- Name: noticias_dest_fecha_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX noticias_dest_fecha_idx ON public.noticias USING btree (destacada, fecha_publicacion DESC);
+
+
+--
+-- Name: noticias_publicado_fecha_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX noticias_publicado_fecha_idx ON public.noticias USING btree (publicado, fecha_publicacion DESC);
+
+
+--
+-- Name: notificaciones_usuario_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notificaciones_usuario_idx ON public.notificaciones USING btree (usuario_id);
+
+
+--
+-- Name: reviews_gimnasio_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX reviews_gimnasio_idx ON public.reviews USING btree (gimnasio_id);
+
+
+--
+-- Name: reviews_usuario_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX reviews_usuario_idx ON public.reviews USING btree (usuario_id);
+
+
+--
+-- Name: suscripciones_gimnasio_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX suscripciones_gimnasio_idx ON public.suscripciones USING btree (gimnasio_id);
+
+
+--
+-- Name: suscripciones_usuario_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX suscripciones_usuario_idx ON public.suscripciones USING btree (usuario_id);
+
+
+--
+-- Name: compatibilidades trg_compatibilidades_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_compatibilidades_updated_at BEFORE UPDATE ON public.compatibilidades FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: gimnasios trg_gimnasios_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_gimnasios_updated_at BEFORE UPDATE ON public.gimnasios FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: posts trg_posts_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_posts_updated_at BEFORE UPDATE ON public.posts FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: usuarios trg_usuarios_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_usuarios_updated_at BEFORE UPDATE ON public.usuarios FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: clases clases_gimnasio_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clases
+    ADD CONSTRAINT clases_gimnasio_id_fkey FOREIGN KEY (gimnasio_id) REFERENCES public.gimnasios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: compatibilidades compatibilidades_arte_marcial_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.compatibilidades
+    ADD CONSTRAINT compatibilidades_arte_marcial_id_fkey FOREIGN KEY (arte_marcial_id) REFERENCES public.artes_marciales(id) ON DELETE CASCADE;
+
+
+--
+-- Name: compatibilidades compatibilidades_creado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.compatibilidades
+    ADD CONSTRAINT compatibilidades_creado_por_fkey FOREIGN KEY (creado_por) REFERENCES public.usuarios(id) ON DELETE SET NULL;
+
+
+--
+-- Name: compatibilidades compatibilidades_lesion_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.compatibilidades
+    ADD CONSTRAINT compatibilidades_lesion_id_fkey FOREIGN KEY (lesion_id) REFERENCES public.lesiones(id) ON DELETE CASCADE;
+
+
+--
+-- Name: contactos contactos_gimnasio_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.contactos
+    ADD CONSTRAINT contactos_gimnasio_id_fkey FOREIGN KEY (gimnasio_id) REFERENCES public.gimnasios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: favoritos favoritos_gimnasio_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favoritos
+    ADD CONSTRAINT favoritos_gimnasio_id_fkey FOREIGN KEY (gimnasio_id) REFERENCES public.gimnasios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: favoritos favoritos_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favoritos
+    ADD CONSTRAINT favoritos_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: gimnasio_artes_marciales gimnasio_artes_marciales_arte_marcial_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gimnasio_artes_marciales
+    ADD CONSTRAINT gimnasio_artes_marciales_arte_marcial_id_fkey FOREIGN KEY (arte_marcial_id) REFERENCES public.artes_marciales(id) ON DELETE CASCADE;
+
+
+--
+-- Name: gimnasio_artes_marciales gimnasio_artes_marciales_gimnasio_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gimnasio_artes_marciales
+    ADD CONSTRAINT gimnasio_artes_marciales_gimnasio_id_fkey FOREIGN KEY (gimnasio_id) REFERENCES public.gimnasios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: gimnasio_trabajadores gimnasio_trabajadores_gimnasio_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gimnasio_trabajadores
+    ADD CONSTRAINT gimnasio_trabajadores_gimnasio_id_fkey FOREIGN KEY (gimnasio_id) REFERENCES public.gimnasios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: gimnasio_trabajadores gimnasio_trabajadores_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gimnasio_trabajadores
+    ADD CONSTRAINT gimnasio_trabajadores_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: gimnasios gimnasios_propietario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gimnasios
+    ADD CONSTRAINT gimnasios_propietario_id_fkey FOREIGN KEY (propietario_id) REFERENCES public.usuarios(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: notificaciones notificaciones_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notificaciones
+    ADD CONSTRAINT notificaciones_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: pagos pagos_suscripcion_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pagos
+    ADD CONSTRAINT pagos_suscripcion_id_fkey FOREIGN KEY (suscripcion_id) REFERENCES public.suscripciones(id) ON DELETE CASCADE;
+
+
+--
+-- Name: post_artes_marciales post_artes_marciales_arte_marcial_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_artes_marciales
+    ADD CONSTRAINT post_artes_marciales_arte_marcial_id_fkey FOREIGN KEY (arte_marcial_id) REFERENCES public.artes_marciales(id) ON DELETE CASCADE;
+
+
+--
+-- Name: post_artes_marciales post_artes_marciales_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_artes_marciales
+    ADD CONSTRAINT post_artes_marciales_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: post_etiquetas post_etiquetas_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_etiquetas
+    ADD CONSTRAINT post_etiquetas_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: posts posts_autor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_autor_id_fkey FOREIGN KEY (autor_id) REFERENCES public.usuarios(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: reviews reviews_gimnasio_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_gimnasio_id_fkey FOREIGN KEY (gimnasio_id) REFERENCES public.gimnasios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: reviews reviews_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: suscripciones suscripciones_gimnasio_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.suscripciones
+    ADD CONSTRAINT suscripciones_gimnasio_id_fkey FOREIGN KEY (gimnasio_id) REFERENCES public.gimnasios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: suscripciones suscripciones_plan_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.suscripciones
+    ADD CONSTRAINT suscripciones_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.planes(id);
+
+
+--
+-- Name: suscripciones suscripciones_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.suscripciones
+    ADD CONSTRAINT suscripciones_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: usuario_artes_marciales usuario_artes_marciales_arte_marcial_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario_artes_marciales
+    ADD CONSTRAINT usuario_artes_marciales_arte_marcial_id_fkey FOREIGN KEY (arte_marcial_id) REFERENCES public.artes_marciales(id) ON DELETE CASCADE;
+
+
+--
+-- Name: usuario_artes_marciales usuario_artes_marciales_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario_artes_marciales
+    ADD CONSTRAINT usuario_artes_marciales_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: usuario_lesiones usuario_lesiones_lesion_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario_lesiones
+    ADD CONSTRAINT usuario_lesiones_lesion_id_fkey FOREIGN KEY (lesion_id) REFERENCES public.lesiones(id) ON DELETE CASCADE;
+
+
+--
+-- Name: usuario_lesiones usuario_lesiones_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario_lesiones
+    ADD CONSTRAINT usuario_lesiones_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id) ON DELETE CASCADE;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict JXnlTF6I8IoPs4ZsuhFxmkVWf6wofcQgiKHsQ4NCD415VlbEUgXxAQuikhMSDqF
+

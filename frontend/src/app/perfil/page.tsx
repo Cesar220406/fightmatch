@@ -5,31 +5,32 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { api } from '@/lib/api';
-import type { Usuario, Lesion, ArteMarcial, Gimnasio } from '@/types';
+import type { Usuario, Lesion, ArteMarcial, Gimnasio, Suscripcion, Pago } from '@/types';
 
-type Tab = 'gimnasios' | 'deportes' | 'lesiones' | 'recomendaciones';
+type Tab = 'gimnasios' | 'suscripciones' | 'deportes' | 'lesiones' | 'recomendaciones';
+
+const ESTADO_COLORS: Record<string,string> = {
+  activa:'#52b788', pausada:'#d4a017', cancelada:'#c41e1e', vencida:'#555555',
+};
 
 export default function PerfilPage() {
   const router = useRouter();
-  const [user, setUser]           = useState<Usuario | null>(null);
-  const [tab, setTab]             = useState<Tab>('gimnasios');
+  const [user, setUser]     = useState<Usuario | null>(null);
+  const [tab, setTab]       = useState<Tab>('gimnasios');
 
-  // Data
-  const [lesionesAll, setLesionesAll]   = useState<Lesion[]>([]);
-  const [artesAll, setArtesAll]         = useState<ArteMarcial[]>([]);
-  const [favoritos, setFavoritos]       = useState<Gimnasio[]>([]);
+  const [lesionesAll, setLesionesAll] = useState<Lesion[]>([]);
+  const [artesAll, setArtesAll]       = useState<ArteMarcial[]>([]);
+  const [favoritos, setFavoritos]     = useState<Gimnasio[]>([]);
   const [recomendaciones, setRecomendaciones] = useState<ArteMarcial[]>([]);
-
-  // Editable selections
-  const [lesionSel, setLesionSel]   = useState<number[]>([]);
-  const [arteSel, setArteSel]       = useState<number[]>([]);
-
-  const [guardando, setGuardando]   = useState(false);
+  const [suscripciones, setSuscripciones] = useState<Suscripcion[]>([]);
+  const [pagos, setPagos]   = useState<Pago[]>([]);
+  const [lesionSel, setLesionSel] = useState<number[]>([]);
+  const [arteSel, setArteSel]     = useState<number[]>([]);
+  const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/auth/login'); return; }
-
     Promise.all([
       api.get<Usuario>('/usuarios/me', token),
       api.get<Lesion[]>('/lesiones'),
@@ -45,12 +46,25 @@ export default function PerfilPage() {
     }).catch(() => { localStorage.removeItem('token'); router.push('/auth/login'); });
   }, [router]);
 
-  // Load recommendations when tab changes to recomendaciones
   useEffect(() => {
     if (tab !== 'recomendaciones') return;
     const token = localStorage.getItem('token') ?? '';
     api.get<ArteMarcial[]>('/usuarios/me/recomendaciones', token)
       .then(setRecomendaciones).catch(() => setRecomendaciones([]));
+  }, [tab]);
+
+  useEffect(() => {
+    if (tab !== 'suscripciones') return;
+    const token = localStorage.getItem('token') ?? '';
+    if (suscripciones.length === 0) {
+      api.get<Suscripcion[]>('/suscripciones/mias', token)
+        .then(setSuscripciones).catch(() => {});
+    }
+    if (pagos.length === 0) {
+      api.get<Pago[]>('/pagos', token)
+        .then(setPagos).catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
   async function guardarLesiones() {
@@ -75,11 +89,29 @@ export default function PerfilPage() {
     try {
       await api.delete(`/favoritos/${gimnasioId}`, localStorage.getItem('token') ?? '');
       setFavoritos(prev => prev.filter(g => g.id !== gimnasioId));
-      // Sync cache so FavoritoBtn reflects the change instantly
       const { removeFavorito } = await import('@/lib/favoritosCache');
       removeFavorito(gimnasioId);
-      toast.success('Gimnasio eliminado de favoritos');
+      toast.success('Gimnasio eliminado');
     } catch { toast.error('Error al eliminar'); }
+  }
+
+  async function cancelarSuscripcion(id: string) {
+    if (!confirm('¿Cancelar esta suscripción?')) return;
+    const token = localStorage.getItem('token') ?? '';
+    try {
+      await api.put(`/suscripciones/${id}`, { estado: 'cancelada' }, token);
+      setSuscripciones(prev => prev.map(s => s.id === id ? { ...s, estado: 'cancelada' } : s));
+      toast.success('Suscripción cancelada');
+    } catch { toast.error('Error al cancelar'); }
+  }
+
+  async function pausarSuscripcion(id: string) {
+    const token = localStorage.getItem('token') ?? '';
+    try {
+      await api.put(`/suscripciones/${id}`, { estado: 'pausada' }, token);
+      setSuscripciones(prev => prev.map(s => s.id === id ? { ...s, estado: 'pausada' } : s));
+      toast.success('Suscripción pausada');
+    } catch { toast.error('Error'); }
   }
 
   function cerrarSesion() {
@@ -92,7 +124,6 @@ export default function PerfilPage() {
     </div>
   );
 
-  // Redirect gym owners to their dedicated panel
   if (user.rol === 'gimnasio') {
     router.replace('/perfil/gimnasio');
     return (
@@ -105,12 +136,14 @@ export default function PerfilPage() {
   const porZonaLesiones = lesionesAll.reduce<Record<string, Lesion[]>>((acc, l) => {
     const z = l.zona_corporal ?? 'Otra';
     if (!acc[z]) acc[z] = [];
-    acc[z].push(l);
-    return acc;
+    acc[z].push(l); return acc;
   }, {});
+
+  const susActivas = suscripciones.filter(s => s.estado === 'activa').length;
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: 'gimnasios',       label: 'Mis gimnasios',    count: favoritos.length },
+    { id: 'suscripciones',   label: 'Suscripciones',   count: susActivas || undefined },
     { id: 'deportes',        label: 'Mis deportes',     count: arteSel.length },
     { id: 'lesiones',        label: 'Mis lesiones',     count: lesionSel.length },
     { id: 'recomendaciones', label: 'Recomendaciones' },
@@ -120,7 +153,6 @@ export default function PerfilPage() {
     <div className="py-14">
       <div className="page-container max-w-4xl">
 
-        {/* Header usuario */}
         <div className="flex items-center gap-5 mb-10 pb-8" style={{ borderBottom: '1px solid #2a2a2a' }}>
           <div className="h-16 w-16 bg-[#c41e1e] flex items-center justify-center font-display text-2xl text-white shrink-0">
             {user.nombre[0].toUpperCase()}
@@ -132,24 +164,18 @@ export default function PerfilPage() {
           </div>
           <div className="flex gap-2 shrink-0">
             {lesionSel.length > 0 && (
-              <Link href={`/buscar?lesion=${lesionSel.join(',')}`} className="btn-primary text-xs py-2 px-4">
-                Buscar para mí →
-              </Link>
+              <Link href={`/buscar?lesion=${lesionSel.join(',')}`} className="btn-primary text-xs py-2 px-4">Buscar para mí →</Link>
             )}
             <button onClick={cerrarSesion} className="btn-secondary text-xs py-2 px-4">Salir</button>
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-0 mb-8 overflow-x-auto" style={{ borderBottom: '1px solid #2a2a2a' }}>
           {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+            <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-5 py-3 text-xs font-semibold uppercase tracking-widest whitespace-nowrap transition-colors border-b-2 -mb-px flex items-center gap-2 ${
                 tab === t.id ? 'border-[#c41e1e] text-white' : 'border-transparent text-[#555555] hover:text-[#888888]'
-              }`}
-            >
+              }`}>
               {t.label}
               {t.count !== undefined && t.count > 0 && (
                 <span className="text-[10px] bg-[#c41e1e] text-white px-1.5 py-0.5 font-bold leading-none">{t.count}</span>
@@ -158,24 +184,23 @@ export default function PerfilPage() {
           ))}
         </div>
 
-        {/* ── MIS GIMNASIOS ─────────────────────────────── */}
+        {/* ── Mis Gimnasios ── */}
         {tab === 'gimnasios' && (
           <section>
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-2xl text-white uppercase tracking-wide">Mis gimnasios</h2>
-              <Link href="/gimnasios" className="text-xs text-[#d4a017] hover:text-[#e8b520] uppercase tracking-widest transition-colors">
-                Explorar más →
-              </Link>
+              <Link href="/gimnasios" className="text-xs text-[#d4a017] hover:text-[#e8b520] uppercase tracking-widest transition-colors">Explorar más →</Link>
             </div>
             {favoritos.length === 0 ? (
               <div className="py-16 text-center border border-[#2a2a2a]">
-                <p className="text-sm text-[#666666] uppercase tracking-widest mb-4">No tienes gimnasios guardados.</p>
+                <p className="text-sm text-[#666666] uppercase tracking-widest mb-1">Tu lista está vacía. Todavía no has encontrado el tuyo.</p>
+                <p className="text-xs text-[#444444] mb-6">Guarda los que te interesen y los tendrás aquí de un vistazo.</p>
                 <Link href="/gimnasios" className="btn-secondary text-xs">Explorar gimnasios</Link>
               </div>
             ) : (
               <div className="space-y-3">
                 {favoritos.map(g => (
-                  <div key={g.id} className="flex items-center gap-4 p-4 border border-[#2a2a2a] bg-[#0d0d0d] hover:border-[#2a2a2a]/80 transition-all">
+                  <div key={g.id} className="flex items-center gap-4 p-4 border border-[#2a2a2a] bg-[#0d0d0d] transition-all">
                     {g.imagen_url ? (
                       <img src={g.imagen_url} alt={g.nombre} className="w-16 h-16 object-cover shrink-0" />
                     ) : (
@@ -196,15 +221,11 @@ export default function PerfilPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      {g.verificado && <span className="badge-green">V</span>}
-                      {g.precio_desde && <span className="text-xs text-[#d4a017] font-semibold">{g.precio_desde}€</span>}
+                      <Link href={`/suscripcion/nueva/${g.slug}`} className="text-xs text-[#d4a017] uppercase tracking-widest hover:text-[#e8b520] transition-colors">
+                        Suscribirse
+                      </Link>
                       <Link href={`/gimnasios/${g.slug}`} className="text-xs text-[#888888] hover:text-[#d4a017] uppercase tracking-widest transition-colors">Ver</Link>
-                      <button
-                        onClick={() => quitarFavorito(g.id)}
-                        className="text-xs text-[#555555] hover:text-red-400 transition-colors uppercase tracking-widest"
-                      >
-                        Quitar
-                      </button>
+                      <button onClick={() => quitarFavorito(g.id)} className="text-xs text-[#555555] hover:text-red-400 transition-colors uppercase tracking-widest">Quitar</button>
                     </div>
                   </div>
                 ))}
@@ -213,7 +234,103 @@ export default function PerfilPage() {
           </section>
         )}
 
-        {/* ── MIS DEPORTES ──────────────────────────────── */}
+        {/* ── Suscripciones ── */}
+        {tab === 'suscripciones' && (
+          <section className="space-y-8">
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="font-display text-2xl text-white uppercase tracking-wide">Mis suscripciones</h2>
+                <Link href="/suscripcion/planes" className="text-xs text-[#d4a017] uppercase tracking-widest hover:text-[#e8b520] transition-colors">Ver planes →</Link>
+              </div>
+              {suscripciones.length === 0 ? (
+                <div className="py-12 text-center border border-[#2a2a2a]">
+                  <p className="text-sm text-[#666666] uppercase tracking-widest mb-1">Sin suscripciones activas.</p>
+                  <p className="text-xs text-[#444444] mb-6">Suscríbete a un gimnasio para ver el historial aquí.</p>
+                  <Link href="/gimnasios" className="btn-secondary text-xs">Buscar gimnasios</Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {suscripciones.map(s => (
+                    <div key={s.id} className="p-5 border border-[#2a2a2a] bg-[#0d0d0d]"
+                      style={{ borderLeft: `3px solid ${ESTADO_COLORS[s.estado] ?? '#555555'}` }}>
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 flex-wrap mb-1">
+                            <p className="font-display text-xl text-white uppercase tracking-wide">{s.gimnasio_nombre}</p>
+                            <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5"
+                              style={{ color: ESTADO_COLORS[s.estado], border: `1px solid ${ESTADO_COLORS[s.estado]}33` }}>
+                              {s.estado}
+                            </span>
+                          </div>
+                          <p className="text-xs text-[#d4a017] font-semibold uppercase tracking-widest mb-1">{s.plan_nombre}</p>
+                          <p className="text-xs text-[#555555]">
+                            {new Date(s.fecha_inicio).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })}
+                            {' → '}
+                            {new Date(s.fecha_fin).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-display text-3xl text-[#d4a017]">{Number(s.precio_pagado).toFixed(2)}€</p>
+                          <p className="text-xs text-[#555555]">al mes</p>
+                          {s.estado === 'activa' && (
+                            <div className="flex gap-2 mt-3 justify-end">
+                              <button onClick={() => pausarSuscripcion(s.id)}
+                                className="text-xs text-[#888888] hover:text-[#d4a017] uppercase tracking-widest transition-colors">
+                                Pausar
+                              </button>
+                              <button onClick={() => cancelarSuscripcion(s.id)}
+                                className="text-xs text-[#555555] hover:text-[#c41e1e] uppercase tracking-widest transition-colors">
+                                Cancelar
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {pagos.length > 0 && (
+              <div>
+                <h3 className="font-display text-xl text-white uppercase tracking-wide mb-4" style={{ borderBottom:'1px solid #2a2a2a', paddingBottom:'0.75rem' }}>
+                  Historial de pagos
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ borderBottom:'1px solid #2a2a2a' }}>
+                        {['Gimnasio','Plan','Importe','Estado','Fecha'].map(h => (
+                          <th key={h} className="text-left text-xs font-semibold uppercase tracking-widest text-[#555555] pb-3 pr-4">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pagos.map(p => (
+                        <tr key={p.id} style={{ borderBottom:'1px solid #1a1a1a' }}>
+                          <td className="py-3 pr-4 text-[#f0f0f0]">{p.gimnasio_nombre}</td>
+                          <td className="py-3 pr-4 text-[#888888]">{p.plan_nombre}</td>
+                          <td className="py-3 pr-4 text-[#d4a017] font-semibold">{p.importe}€</td>
+                          <td className="py-3 pr-4">
+                            <span className="text-xs font-bold" style={{ color: p.estado === 'pagado' ? '#52b788' : p.estado === 'fallido' ? '#c41e1e' : '#d4a017' }}>
+                              {p.estado}
+                            </span>
+                          </td>
+                          <td className="py-3 text-[#555555] text-xs">
+                            {new Date(p.fecha_pago).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── Mis Deportes ── */}
         {tab === 'deportes' && (
           <section>
             <div className="flex items-center justify-between mb-6">
@@ -227,24 +344,16 @@ export default function PerfilPage() {
                 {artesAll.map(a => {
                   const activa = arteSel.includes(a.id);
                   return (
-                    <button
-                      key={a.id}
+                    <button key={a.id}
                       onClick={() => setArteSel(prev => activa ? prev.filter(x => x !== a.id) : [...prev, a.id])}
                       className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all border ${
-                        activa
-                          ? 'bg-[#d4a017] border-[#d4a017] text-black'
-                          : 'bg-transparent border-[#2a2a2a] text-[#666666] hover:border-[#d4a017] hover:text-[#d4a017]'
-                      }`}
-                      style={{ borderRadius: 0 }}
-                    >
+                        activa ? 'bg-[#d4a017] border-[#d4a017] text-black' : 'bg-transparent border-[#2a2a2a] text-[#666666] hover:border-[#d4a017] hover:text-[#d4a017]'
+                      }`} style={{ borderRadius:0 }}>
                       {a.nombre}
                     </button>
                   );
                 })}
               </div>
-              <p className="text-xs text-[#555555] uppercase tracking-widest">
-                {arteSel.length} deporte{arteSel.length !== 1 ? 's' : ''} seleccionado{arteSel.length !== 1 ? 's' : ''}
-              </p>
               <div className="pt-4 border-t border-[#2a2a2a]">
                 <button onClick={guardarArtes} disabled={guardando} className="btn-primary">
                   {guardando ? 'Guardando...' : 'Guardar deportes'}
@@ -254,7 +363,7 @@ export default function PerfilPage() {
           </section>
         )}
 
-        {/* ── MIS LESIONES ──────────────────────────────── */}
+        {/* ── Mis Lesiones ── */}
         {tab === 'lesiones' && (
           <section>
             <div className="flex items-center justify-between mb-6">
@@ -271,16 +380,11 @@ export default function PerfilPage() {
                     {items.map(l => {
                       const activa = lesionSel.includes(l.id);
                       return (
-                        <button
-                          key={l.id}
+                        <button key={l.id}
                           onClick={() => setLesionSel(prev => activa ? prev.filter(x => x !== l.id) : [...prev, l.id])}
                           className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all border ${
-                            activa
-                              ? 'bg-[#c41e1e] border-[#c41e1e] text-white'
-                              : 'bg-transparent border-[#2a2a2a] text-[#888888] hover:border-[#d4a017] hover:text-[#d4a017]'
-                          }`}
-                          style={{ borderRadius: 0 }}
-                        >
+                            activa ? 'bg-[#c41e1e] border-[#c41e1e] text-white' : 'bg-transparent border-[#2a2a2a] text-[#888888] hover:border-[#d4a017] hover:text-[#d4a017]'
+                          }`} style={{ borderRadius:0 }}>
                           {l.nombre}
                         </button>
                       );
@@ -302,45 +406,34 @@ export default function PerfilPage() {
           </section>
         )}
 
-        {/* ── RECOMENDACIONES ───────────────────────────── */}
+        {/* ── Recomendaciones ── */}
         {tab === 'recomendaciones' && (
           <section>
             <div className="mb-6">
               <p className="text-xs text-[#c41e1e] uppercase tracking-widest font-semibold mb-1">Basado en tus lesiones</p>
               <h2 className="font-display text-2xl text-white uppercase tracking-wide">Recomendaciones para ti</h2>
-              <p className="text-xs text-[#888888] mt-1">Artes marciales compatibles con tus lesiones que aún no practicas.</p>
             </div>
-
             {lesionSel.length === 0 ? (
               <div className="py-16 text-center border border-[#2a2a2a]">
                 <p className="text-sm text-[#666666] uppercase tracking-widest mb-4">
-                  Primero añade tus lesiones en la pestaña "Mis lesiones".
+                  Sin datos, sin filtro. Dinos qué te duele y te decimos qué aguanta.
                 </p>
-                <button onClick={() => setTab('lesiones')} className="btn-secondary text-xs">
-                  Ir a mis lesiones
-                </button>
+                <button onClick={() => setTab('lesiones')} className="btn-secondary text-xs">Añadir lesiones</button>
               </div>
             ) : recomendaciones.length === 0 ? (
               <div className="py-16 text-center border border-[#2a2a2a]">
-                <p className="text-sm text-[#666666] uppercase tracking-widest">
-                  No hay artes marciales nuevas compatibles con todas tus lesiones,<br />o ya practicas todas las compatibles.
-                </p>
+                <p className="text-sm text-[#666666] uppercase tracking-widest mb-1">Lo practicas todo, o tu cuerpo aguanta más de lo que creías.</p>
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {recomendaciones.map(a => (
-                  <Link
-                    key={a.id}
-                    href={`/artes-marciales/${a.slug}`}
-                    className="group p-5 border border-[#2a2a2a] bg-[#0d0d0d] hover:border-[#c41e1e]/50 transition-all"
-                  >
+                  <Link key={a.id} href={`/artes-marciales/${a.slug}`}
+                    className="group p-5 border border-[#2a2a2a] bg-[#0d0d0d] hover:border-[#c41e1e]/50 transition-all">
                     <div className="flex items-start justify-between mb-3">
                       <p className="font-display text-lg text-white uppercase tracking-wide group-hover:text-[#d4a017] transition-colors">{a.nombre}</p>
                       <span className="badge-green text-[10px] shrink-0 ml-2">Compatible</span>
                     </div>
-                    {a.descripcion && (
-                      <p className="text-xs text-[#666666] leading-relaxed line-clamp-2">{a.descripcion}</p>
-                    )}
+                    {a.descripcion && <p className="text-xs text-[#666666] leading-relaxed line-clamp-2">{a.descripcion}</p>}
                     <p className="mt-3 text-xs text-[#c41e1e] uppercase tracking-widest font-semibold">Ver más →</p>
                   </Link>
                 ))}

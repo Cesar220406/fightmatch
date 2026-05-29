@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useQueryState } from 'nuqs';
 import Link from 'next/link';
 import ArteCard from '@/components/ArteCard';
 import GimnasioCard from '@/components/GimnasioCard';
+import GymCardSkeleton from '@/components/skeletons/GymCardSkeleton';
 import { api } from '@/lib/api';
 import type { ArteMarcial, Gimnasio, Lesion } from '@/types';
 
@@ -27,16 +28,16 @@ function SearchIcon() {
 }
 
 function BuscarContent() {
-  const searchParams = useSearchParams();
-  const ciudadParam  = searchParams.get('ciudad') ?? '';
-  const lesionParam  = searchParams.get('lesion') ?? '';
+  // nuqs guarda los filtros en la URL para poder compartirla
+  const [ciudadParam] = useQueryState('ciudad', { defaultValue: '' });
+  const [lesionParam] = useQueryState('lesion', { defaultValue: '' });
 
   const [artes, setArtes]           = useState<ArteMarcial[]>([]);
   const [gimnasios, setGimnasios]   = useState<Gimnasio[]>([]);
   const [lesiones, setLesiones]     = useState<Lesion[]>([]);
   const [loading, setLoading]       = useState(true);
 
-  // Geolocation state
+  // estado para la geolocalizacion
   const [geoActiva, setGeoActiva]   = useState(false);
   const [geoError, setGeoError]     = useState('');
   const [geoLoading, setGeoLoading] = useState(false);
@@ -165,7 +166,29 @@ function BuscarContent() {
           )}
         </div>
 
-        {/* ── Panel de geolocalización ── */}
+        {/* nota sobre el filtro de lesiones */}
+        {lesionIds.length > 0 && !loading && (
+          <div className="mb-8 px-4 py-3 flex items-start gap-3"
+            style={{ border: '1px solid rgba(212,160,23,0.2)', borderLeft: '3px solid #d4a017', background: 'rgba(212,160,23,0.04)' }}>
+            <svg className="h-4 w-4 text-[#d4a017] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-[#d4a017] uppercase tracking-widest mb-0.5">Filtro activo</p>
+              <p className="text-xs text-[#888888] leading-relaxed">
+                Mostrando artes marciales compatibles con {lesionesActivas.length > 0
+                  ? lesionesActivas.map(l => l.nombre).join(', ')
+                  : `${lesionIds.length} lesión${lesionIds.length !== 1 ? 'es' : ''}`}.
+                {' '}Los gimnasios listados ofrecen al menos una de ellas.
+              </p>
+            </div>
+            <Link href="/buscar" className="text-[10px] text-[#444444] hover:text-[#888888] uppercase tracking-widest whitespace-nowrap transition-colors shrink-0">
+              × Quitar
+            </Link>
+          </div>
+        )}
+
+        {/* geolocalizacion */}
         <div className="mb-10 p-5 border border-[#2a2a2a] bg-[#0d0d0d]">
           <p className="text-xs font-semibold uppercase tracking-widest text-[#888888] mb-3">
             Buscar por distancia
@@ -228,21 +251,26 @@ function BuscarContent() {
           )}
         </div>
 
-        {/* Loading */}
+        {/* mientras carga muestro skeletons en vez de un spinner */}
         {loading && (
-          <div className="text-center py-20">
-            <p className="text-xs text-[#888888] uppercase tracking-widest">Buscando...</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => <GymCardSkeleton key={i} />)}
           </div>
         )}
 
         {!loading && !tieneResultados && (
           <div className="text-center py-24">
             <div className="flex justify-center mb-4"><SearchIcon /></div>
-            <p className="font-display text-4xl text-[#2a2a2a] mb-3 uppercase">Sin resultados</p>
-            <p className="text-sm text-[#666666] uppercase tracking-widest mb-8">
+            <p className="font-display text-4xl text-[#2a2a2a] mb-3 uppercase">
+              Aquí no hay nada… de momento
+            </p>
+            <p className="text-sm text-[#666666] uppercase tracking-widest mb-2">
               {geoActiva
-                ? `No hay gimnasios en un radio de ${radio > 0 ? `${radio} km` : 'tu zona'}.`
-                : 'No encontramos gimnasios compatibles con tu búsqueda.'}
+                ? `Amplía el radio o activa el filtro por ciudad.`
+                : 'Prueba sin filtros. O con otra ciudad.'}
+            </p>
+            <p className="text-xs text-[#444444] mb-8">
+              Si un gimnasio debería aparecer aquí, su dueño aún no lo sabe.
             </p>
             <a href="/" className="btn-primary">Volver al inicio</a>
           </div>
@@ -341,10 +369,15 @@ function BuscarContent() {
 }
 
 export default function BuscarPage() {
+  // nuqs necesita Suspense porque usa useSearchParams por dentro
   return (
     <Suspense fallback={
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <p className="text-xs text-[#888888] uppercase tracking-widest">Cargando...</p>
+      <div className="py-14">
+        <div className="page-container">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-20">
+            {Array.from({ length: 6 }).map((_, i) => <GymCardSkeleton key={i} />)}
+          </div>
+        </div>
       </div>
     }>
       <BuscarContent />

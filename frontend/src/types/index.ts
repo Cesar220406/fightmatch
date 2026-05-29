@@ -2,6 +2,7 @@ export type Rol = 'admin' | 'gimnasio' | 'cliente' | 'editor';
 export type NivelExperiencia = 'principiante' | 'intermedio' | 'avanzado';
 export type SeveridadLesion = 'leve' | 'moderada' | 'grave';
 export type EstadoPublicacion = 'borrador' | 'publicado' | 'archivado';
+export type EstadoSuscripcion = 'activa' | 'pausada' | 'cancelada' | 'vencida';
 
 export interface Usuario {
   id: string;
@@ -68,6 +69,24 @@ export interface Gimnasio {
   distancia_km?: number;
 }
 
+export interface Noticia {
+  id: string;
+  slug: string;
+  titulo: string;
+  subtitulo?: string;
+  contenido?: string;
+  resumen?: string;
+  imagen_url?: string;
+  imagen_alt?: string;
+  categoria: string;
+  autor: string;
+  publicado: boolean;
+  destacada: boolean;
+  fecha_publicacion: string;
+  views: number;
+  tiempo_lectura?: number;
+}
+
 export interface Post {
   id: string;
   titulo: string;
@@ -80,4 +99,68 @@ export interface Post {
   autor_nombre?: string;
   autor_avatar?: string;
   etiquetas?: string[];
+}
+
+export interface Plan {
+  id: number;
+  nombre: string;
+  precio: number;
+  descripcion?: string;
+  activo: boolean;
+}
+
+export interface Suscripcion {
+  id: string;
+  usuario_id: string;
+  gimnasio_id: string;
+  plan_id: number;
+  estado: EstadoSuscripcion;
+  fecha_inicio: string;
+  fecha_fin: string;
+  precio_pagado: number;
+  creado_en: string;
+  plan_nombre?: string;
+  plan_precio?: number;
+  gimnasio_nombre?: string;
+  gimnasio_slug?: string;
+  gimnasio_imagen?: string;
+  // miembros query fields
+  nombre?: string;
+  apellidos?: string;
+  email?: string;
+  usuario_id_field?: string;
+}
+
+export interface Pago {
+  id: string;
+  suscripcion_id: string;
+  importe: number;
+  estado: 'pagado' | 'pendiente' | 'fallido';
+  fecha_pago: string;
+  concepto?: string;
+  plan_nombre?: string;
+  gimnasio_nombre?: string;
+}
+
+export interface Clase {
+  id: string;
+  gimnasio_id: string;
+  nombre: string;
+  instructor?: string;
+  arte_marcial?: string;
+  dia_semana: number;
+  hora_inicio: string;
+  hora_fin: string;
+  aforo_max: number;
+  activa: boolean;
+}
+
+export interface Notificacion {
+  id: string;
+  usuario_id: string;
+  tipo: string;
+  titulo: string;
+  mensaje: string;
+  leida: boolean;
+  creado_en: string;
 }

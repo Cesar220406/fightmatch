@@ -23,14 +23,14 @@ function requireRol(...roles) {
   };
 }
 
-// Sets req.user if a valid token is present, but never rejects
+// igual que auth pero no rechaza si no hay token, solo lo intenta
 function optionalAuth(req, _res, next) {
   const header = req.headers.authorization;
   if (header && header.startsWith('Bearer ')) {
     try {
       req.user = jwt.verify(header.slice(7), process.env.JWT_SECRET);
     } catch {
-      // invalid token → proceed as unauthenticated
+      // token malo o caducado, seguimos sin usuario autenticado
     }
   }
   next();

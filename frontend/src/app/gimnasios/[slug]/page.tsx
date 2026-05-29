@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import FavoritoBtn from '@/components/FavoritoBtn';
 import ContactarModal from '@/components/ContactarModal';
+import ReviewsSection from '@/components/ReviewsSection';
 import type { Gimnasio } from '@/types';
 import type { Metadata } from 'next';
 
@@ -126,6 +127,9 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
                 </div>
               </div>
             )}
+
+            {/* Reseñas */}
+            <ReviewsSection gimnasioId={g.id} />
 
             {/* Mapa */}
             {(g.latitud && g.longitud) || g.direccion ? (

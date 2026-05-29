@@ -40,7 +40,7 @@ router.post('/registro', [
     );
     const user = rows[0];
 
-    // Si es gimnasio, crear el gimnasio asociado
+    // si el usuario se registra como gimnasio, creo el gimnasio en la misma transaccion
     if (rol === 'gimnasio') {
       const slug = (gimnasio_nombre)
         .toLowerCase()
@@ -48,7 +48,7 @@ router.post('/registro', [
         .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
         .substring(0, 220);
 
-      // Ensure slug uniqueness
+      // a\u00f1ado timestamp al slug para que no haya duplicados
       const slugFinal = `${slug}-${Date.now().toString(36)}`;
 
       await client.query(

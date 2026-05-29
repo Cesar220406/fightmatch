@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { marked } from 'marked';
 import { api } from '@/lib/api';
 import type { Post } from '@/types';
 import type { Metadata } from 'next';
@@ -26,6 +27,8 @@ function formatFecha(iso?: string) {
 export default async function BlogDetallePage({ params }: { params: { slug: string } }) {
   const post = await getPost(params.slug);
   if (!post) notFound();
+
+  const htmlContent = marked.parse(post.contenido ?? '') as string;
 
   return (
     <div className="py-14">
@@ -81,7 +84,7 @@ export default async function BlogDetallePage({ params }: { params: { slug: stri
                      prose-headings:text-white prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide
                      prose-a:text-[#d4a017] prose-a:no-underline hover:prose-a:underline
                      prose-strong:text-white prose-code:text-[#c41e1e]"
-          dangerouslySetInnerHTML={{ __html: post.contenido ?? '' }}
+          dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
 
         {/* Volver */}

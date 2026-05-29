@@ -47,7 +47,7 @@ export default function AdminGimnasios() {
     setGimnasios(data);
   }
 
-  // ── CREAR ────────────────────────────────────────────────
+  // CREAR
   function onChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
     setForm(f => ({ ...f, [name]: value, ...(name === 'nombre' ? { slug: slugify(value) } : {}) }));
@@ -69,7 +69,7 @@ export default function AdminGimnasios() {
     } finally { setLoading(false); }
   }
 
-  // ── EDITAR ───────────────────────────────────────────────
+  // EDITAR
   function seleccionarEditar(g: Gimnasio) {
     setEditGym(g);
     setEditForm({
@@ -111,7 +111,7 @@ export default function AdminGimnasios() {
     } finally { setLoading(false); }
   }
 
-  // ── ARTES ────────────────────────────────────────────────
+  // ARTES
   async function seleccionarArtes(gymId: string) {
     setArtesGymId(gymId);
     setTab('artes');

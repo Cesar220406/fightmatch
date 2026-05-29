@@ -21,6 +21,10 @@ export function isEditor(): boolean {
   return rol === 'admin' || rol === 'editor';
 }
 
+export function isGimnasio(): boolean {
+  return getUser()?.rol === 'gimnasio';
+}
+
 export function logout(): void {
   localStorage.removeItem('token');
   localStorage.removeItem('user');

@@ -1,23 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Design tokens ──────────────────────────────────────── */
+:root {
+  --fm-red:        #c41e1e;
+  --fm-red-dark:   #a01818;
+  --fm-gold:       #d4a017;
+  --fm-gold-light: #e8b520;
+  --fm-gold-dark:  #b8880f;
+  --fm-bg:         #0a0a0a;
+  --fm-surface:    #111111;
+  --fm-raised:     #1a1a1a;
+  --fm-border:     #2a2a2a;
+  --fm-text:       #f0f0f0;
+  --fm-muted:      #888888;
+  --fm-dim:        #444444;
+}
 
 @layer base {
   html { scroll-behavior: smooth; }
 
   body {
     @apply bg-[#0a0a0a] text-[#f0f0f0] antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-sans), 'Inter', system-ui, sans-serif;
     /* Dragon scale background texture */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='34'%3E%3Ccircle cx='20' cy='34' r='22' fill='none' stroke='%231a1a1a' stroke-width='1'/%3E%3Ccircle cx='0' cy='34' r='22' fill='none' stroke='%231a1a1a' stroke-width='1'/%3E%3Ccircle cx='40' cy='34' r='22' fill='none' stroke='%231a1a1a' stroke-width='1'/%3E%3Ccircle cx='10' cy='12' r='22' fill='none' stroke='%231a1a1a' stroke-width='1'/%3E%3Ccircle cx='30' cy='12' r='22' fill='none' stroke='%231a1a1a' stroke-width='1'/%3E%3C/svg%3E");
     background-size: 40px 34px;
   }
 
   h1, h2, h3, h4 {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: var(--font-display), 'Bebas Neue', sans-serif;
     letter-spacing: 0.05em;
+  }
+
+  /* Keyboard nav — only show ring when navigating with keyboard */
+  :focus-visible {
+    outline: 2px solid var(--fm-gold);
+    outline-offset: 2px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
   }
 }
 
@@ -29,7 +52,8 @@
            bg-[#c41e1e] px-6 py-2.5 text-sm font-semibold
            uppercase tracking-widest text-white
            transition-all duration-200
-           hover:bg-[#a01818] active:scale-95 disabled:opacity-50;
+           hover:bg-[#a01818] active:scale-95 disabled:opacity-50
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4a017] focus-visible:ring-offset-1 focus-visible:ring-offset-[#0a0a0a];
     border-radius: 0;
   }
 
@@ -38,33 +62,35 @@
            border border-[#d4a017] px-6 py-2.5 text-sm font-semibold
            uppercase tracking-widest text-[#d4a017]
            transition-all duration-200
-           hover:bg-[#d4a017] hover:text-black active:scale-95;
+           hover:bg-[#d4a017] hover:text-black active:scale-95
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4a017] focus-visible:ring-offset-1 focus-visible:ring-offset-[#0a0a0a];
     border-radius: 0;
   }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2
            px-4 py-2 text-sm font-medium text-[#888888]
-           transition-all duration-200 hover:text-[#d4a017];
+           transition-all duration-200 hover:text-[#d4a017]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4a017];
   }
 
   /* ── Cards ──────────────────────────────────────────────── */
   .card {
     @apply bg-[#1a1a1a] border border-[#2a2a2a] p-5
-           transition-all duration-200;
+           transition-all duration-300;
     border-left: 3px solid #c41e1e;
   }
 
   .card-gold {
     @apply bg-[#1a1a1a] border border-[#2a2a2a] p-5
-           transition-all duration-200;
+           transition-all duration-300;
     border-left: 3px solid #d4a017;
   }
 
   .card:hover {
     @apply border-[#3a3a3a];
     border-left-color: #d4a017;
-    box-shadow: 0 8px 30px rgba(212, 160, 23, 0.08);
+    box-shadow: 0 4px 24px rgba(212, 160, 23, 0.07), 0 1px 4px rgba(0,0,0,0.4);
     transform: translateY(-2px);
   }
 
@@ -73,7 +99,7 @@
     @apply w-full border border-[#2a2a2a] bg-[#111111] px-4 py-2.5
            text-sm text-[#f0f0f0] placeholder-[#444444] outline-none
            transition-all duration-200
-           focus:border-[#d4a017] focus:ring-1 focus:ring-[#d4a017];
+           focus:border-[#d4a017] focus:ring-1 focus:ring-[#d4a017]/40;
     border-radius: 0;
   }
 
@@ -91,13 +117,13 @@
 
   /* ── Tipografía ─────────────────────────────────────────── */
   .title-hero {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: var(--font-display), 'Bebas Neue', sans-serif;
     letter-spacing: 0.06em;
     @apply text-5xl lg:text-8xl text-[#d4a017] leading-none;
   }
 
   .title-section {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: var(--font-display), 'Bebas Neue', sans-serif;
     letter-spacing: 0.05em;
     @apply text-3xl lg:text-4xl text-white;
   }
@@ -121,8 +147,13 @@
 
   /* ── Stat numbers ───────────────────────────────────────── */
   .stat-number {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: var(--font-display), 'Bebas Neue', sans-serif;
     @apply text-5xl text-[#d4a017] leading-none;
+  }
+
+  /* ── Mobile menu ────────────────────────────────────────── */
+  .nav-mobile-menu {
+    animation: slideDown 0.2s ease-out;
   }
 }
 
@@ -133,4 +164,74 @@
 ::-webkit-scrollbar-thumb:hover { background: #d4a017; }
 
 /* ── Prose del blog ─────────────────────────────────────── */
-.prose { --tw-prose-body: #bbbbbb; --tw-prose-headings: #f0f0f0; }
+.prose {
+  --tw-prose-body:        #bbbbbb;
+  --tw-prose-headings:    #f0f0f0;
+  --tw-prose-lead:        #888888;
+  --tw-prose-links:       #d4a017;
+  --tw-prose-bold:        #f0f0f0;
+  --tw-prose-counters:    #d4a017;
+  --tw-prose-bullets:     #c41e1e;
+  --tw-prose-hr:          #2a2a2a;
+  --tw-prose-quotes:      #d4a017;
+  --tw-prose-quote-borders: #c41e1e;
+  --tw-prose-captions:    #666666;
+  --tw-prose-code:        #e8b520;
+  --tw-prose-pre-code:    #f0f0f0;
+  --tw-prose-pre-bg:      #111111;
+  --tw-prose-th-borders:  #2a2a2a;
+  --tw-prose-td-borders:  #1a1a1a;
+}
+
+.prose h2 {
+  font-family: var(--font-display), 'Bebas Neue', sans-serif;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #2a2a2a;
+  padding-bottom: 0.4em;
+}
+
+.prose h3 {
+  font-family: var(--font-display), 'Bebas Neue', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.prose a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s;
+}
+
+.prose a:hover {
+  color: #e8b520;
+}
+
+.prose blockquote {
+  background: #111111;
+  border-left-color: #c41e1e;
+  padding: 1rem 1.25rem;
+  font-style: normal;
+}
+
+.prose code:not(pre code) {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  font-size: 0.875em;
+}
+
+.prose pre {
+  border: 1px solid #2a2a2a;
+  border-left: 3px solid #c41e1e;
+}
+
+/* ── Keyframes ──────────────────────────────────────────── */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

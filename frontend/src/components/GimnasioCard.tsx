@@ -1,8 +1,8 @@
+import { memo } from 'react';
 import Link from 'next/link';
 import type { Gimnasio } from '@/types';
 import FavoritoBtn from './FavoritoBtn';
 
-/* Asanoha (hemp leaf) corner ornament — very subtle */
 function CornerPattern() {
   return (
     <svg
@@ -11,7 +11,6 @@ function CornerPattern() {
       aria-hidden="true"
       style={{ opacity: 0.08 }}
     >
-      {/* Asanoha geometric motif */}
       <line x1="18" y1="0"  x2="18" y2="36" stroke="#d4a017" strokeWidth="0.8"/>
       <line x1="0"  y1="18" x2="36" y2="18" stroke="#d4a017" strokeWidth="0.8"/>
       <line x1="0"  y1="0"  x2="36" y2="36" stroke="#d4a017" strokeWidth="0.8"/>
@@ -23,7 +22,7 @@ function CornerPattern() {
   );
 }
 
-export default function GimnasioCard({ g }: { g: Gimnasio }) {
+const GimnasioCard = memo(function GimnasioCard({ g }: { g: Gimnasio }) {
   return (
     <Link href={`/gimnasios/${g.slug}`} className="card group flex flex-col gap-3 relative overflow-hidden">
       <CornerPattern />
@@ -34,6 +33,8 @@ export default function GimnasioCard({ g }: { g: Gimnasio }) {
           <img
             src={g.imagen_url}
             alt={g.nombre}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
         ) : (
@@ -97,4 +98,6 @@ export default function GimnasioCard({ g }: { g: Gimnasio }) {
       )}
     </Link>
   );
-}
+});
+
+export default GimnasioCard;

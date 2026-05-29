@@ -2,7 +2,7 @@ const router = require('express').Router();
 const pool = require('../db/pool');
 const { auth, requireRol } = require('../middleware/auth');
 
-// GET /api/gimnasios — listado con filtros opcionales (incluye geolocalización Haversine)
+// listado de gimnasios con filtros opcionales; si llega lat/lng calcula distancia con Haversine
 router.get('/', async (req, res) => {
   const { ciudad, arte, lesion_id, page = 1, limit = 20, lat, lng, radio_km } = req.query;
   const offset = (page - 1) * limit;
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     && !isNaN(Number(lat)) && !isNaN(Number(lng));
 
   if (useGeo) {
-    // Only include gyms that have coordinates
+    // sin coordenadas no puedo calcular la distancia, los descarto
     conditions.push('g.latitud IS NOT NULL AND g.longitud IS NOT NULL');
   }
 
@@ -54,7 +54,7 @@ router.get('/', async (req, res) => {
 
   const where = conditions.join(' AND ');
 
-  // Haversine distance expression
+  // formula haversine para calcular km entre dos puntos del globo
   let distanciaExpr = 'NULL::numeric';
   let havingClause = '';
   if (useGeo) {
@@ -101,7 +101,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/gimnasios/mio — gimnasio del usuario autenticado (rol=gimnasio)
+// devuelve el gimnasio del usuario que hace la peticion
 router.get('/mio', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -123,7 +123,7 @@ router.get('/mio', auth, async (req, res) => {
   }
 });
 
-// GET /api/gimnasios/mio/clientes — usuarios que han añadido el gimnasio a favoritos
+// usuarios que tienen este gimnasio en favoritos
 router.get('/mio/clientes', auth, async (req, res) => {
   try {
     const { rows: gymRows } = await pool.query(
@@ -146,7 +146,7 @@ router.get('/mio/clientes', auth, async (req, res) => {
   }
 });
 
-// GET /api/gimnasios/mio/equipo — trabajadores del gimnasio
+// lista de trabajadores del gimnasio
 router.get('/mio/equipo', auth, async (req, res) => {
   try {
     const { rows: gymRows } = await pool.query(
@@ -169,7 +169,7 @@ router.get('/mio/equipo', auth, async (req, res) => {
   }
 });
 
-// POST /api/gimnasios/mio/equipo — añadir trabajador por email
+// añadir trabajador buscandole por email
 router.post('/mio/equipo', auth, async (req, res) => {
   const { email, rol_equipo = 'entrenador' } = req.body;
   if (!email) return res.status(400).json({ error: 'Email requerido' });
@@ -197,7 +197,7 @@ router.post('/mio/equipo', auth, async (req, res) => {
   }
 });
 
-// DELETE /api/gimnasios/mio/equipo/:userId — eliminar trabajador
+// quitar un trabajador del equipo
 router.delete('/mio/equipo/:userId', auth, async (req, res) => {
   try {
     const { rows: gymRows } = await pool.query(
@@ -216,7 +216,7 @@ router.delete('/mio/equipo/:userId', auth, async (req, res) => {
   }
 });
 
-// GET /api/gimnasios/mio/estadisticas — métricas del gimnasio
+// estadisticas basicas del gimnasio para el panel
 router.get('/mio/estadisticas', auth, async (req, res) => {
   try {
     const { rows: gymRows } = await pool.query(
@@ -280,7 +280,7 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
-// GET /api/gimnasios/:id/artes — ids de artes marciales del gimnasio
+// devuelve solo los ids de las artes del gimnasio (lo uso en el formulario de edicion)
 router.get('/:id/artes', async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -294,7 +294,7 @@ router.get('/:id/artes', async (req, res) => {
   }
 });
 
-// PUT /api/gimnasios/:id/artes — reemplaza todas las artes del gimnasio
+// reemplaza las artes del gimnasio (borro todo y reinserto los que llegan)
 router.put('/:id/artes', auth, requireRol('admin', 'gimnasio'), async (req, res) => {
   const { arte_ids } = req.body; // array of integers
   if (!Array.isArray(arte_ids)) return res.status(400).json({ error: 'arte_ids debe ser un array' });
@@ -345,7 +345,7 @@ router.put('/:id', auth, requireRol('admin', 'gimnasio'), async (req, res) => {
   }
 });
 
-// DELETE /api/gimnasios/:id (soft delete)
+// soft delete: marco como inactivo en vez de borrar
 router.delete('/:id', auth, requireRol('admin'), async (req, res) => {
   try {
     await pool.query('UPDATE gimnasios SET activo=FALSE WHERE id=$1', [req.params.id]);
@@ -355,7 +355,10 @@ router.delete('/:id', auth, requireRol('admin'), async (req, res) => {
   }
 });
 
-// POST /api/gimnasios — crear gimnasio (rol: gimnasio, admin)
+// las reseñas tienen su propio archivo de rutas
+router.use('/:id/reviews', require('./reviews'));
+
+// crear gimnasio manualmente desde el admin
 router.post('/', auth, requireRol('gimnasio', 'admin'), async (req, res) => {
   const { nombre, slug, descripcion, direccion, ciudad, provincia,
           codigo_postal, telefono, email_contacto, sitio_web, imagen_url,

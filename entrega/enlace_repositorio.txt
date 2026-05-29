@@ -1,0 +1,7 @@
+REPOSITORIO DE CODIGO
+---------------------
+https://github.com/Cesar220406/fightmatch
+
+Aqui esta todo el codigo fuente del proyecto (frontend, backend, base de datos,
+configuracion de nginx y Docker). El repositorio es publico y se puede navegar
+directamente desde el navegador sin necesidad de descargarlo.

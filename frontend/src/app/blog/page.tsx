@@ -79,9 +79,14 @@ export default async function BlogPage({
         )}
 
         {posts.length === 0 ? (
-          <p className="text-[#888888] text-center py-20 text-sm uppercase tracking-widest">
-            No hay artículos publicados todavía.
-          </p>
+          <div className="text-center py-20">
+            <p className="text-[#888888] text-sm uppercase tracking-widest mb-2">
+              {searchParams.etiqueta ? `Sin artículos con la etiqueta "${searchParams.etiqueta}".` : 'Aún no hay nada publicado.'}
+            </p>
+            <p className="text-xs text-[#444444]">
+              {searchParams.etiqueta ? 'Prueba con otra etiqueta.' : 'Vuelve pronto — estamos escribiendo.'}
+            </p>
+          </div>
         ) : (
           <>
             {/* Featured post */}

@@ -1,0 +1,11 @@
+URL DE PRODUCCION
+-----------------
+https://fightmatch.duckdns.org
+
+La aplicacion esta desplegada y funcionando en este enlace.
+No hace falta instalar nada para verla, funciona directamente en el navegador.
+
+Credenciales de prueba:
+  Admin:    admin@fightmatch.com     /  Admin1234!
+  Gimnasio: gimnasio@fightmatch.com  /  Gimnasio1234!
+  Cliente:  cliente@fightmatch.com   /  Cliente1234!

@@ -57,3 +57,13 @@ package-lock.json
 setup_db.bat
 start_backend.bat
 *.log
+
+# Scripts de deploy (contienen credenciales del VPS)
+deploy_v*.py
+write_improvements.py
+
+# Archivos temporales
+schema_details.txt
+entrega_schema_dump.txt
+__pycache__/
+*.pyc

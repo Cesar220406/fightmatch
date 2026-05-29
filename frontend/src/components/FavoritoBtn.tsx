@@ -28,32 +28,35 @@ export default function FavoritoBtn({ gimnasioId }: { gimnasioId: string }) {
       window.location.href = '/auth/login';
       return;
     }
+
+    // actualizo el estado antes de esperar la respuesta del servidor (optimistic UI)
+    const prev = favorito;
+    setFavorito(!prev);
+    if (prev) removeFavorito(gimnasioId);
+    else      addFavorito(gimnasioId);
+
     setLoading(true);
     try {
-      if (favorito) {
+      if (prev) {
         await api.delete(`/favoritos/${gimnasioId}`, token);
-        removeFavorito(gimnasioId);
-        setFavorito(false);
         toast.success('Eliminado de favoritos');
       } else {
         await api.post('/favoritos', { gimnasio_id: gimnasioId }, token);
-        addFavorito(gimnasioId);
-        setFavorito(true);
-        toast.success('Guardado en favoritos');
+        toast.success('¡Guardado!');
       }
     } catch {
-      toast.error('Error al actualizar favorito');
+      // si falla revierto al estado anterior
+      setFavorito(prev);
+      if (prev) addFavorito(gimnasioId);
+      else      removeFavorito(gimnasioId);
+      toast.error('No se pudo guardar. ¿Hay conexión?');
     } finally {
       setLoading(false);
     }
   }
 
-  // No renderizar nada hasta saber el estado real (evita parpadeo)
-  if (!checked) {
-    return (
-      <span className="w-5 h-5 shrink-0" aria-hidden="true" />
-    );
-  }
+  // espero a saber si es favorito o no antes de pintar el boton
+  if (!checked) return <span className="w-5 h-5 shrink-0" aria-hidden="true" />;
 
   return (
     <button

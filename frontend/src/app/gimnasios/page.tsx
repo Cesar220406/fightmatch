@@ -105,7 +105,8 @@ export default async function GimnasiosPage({
         {gimnasios.length === 0 ? (
           <div className="text-center py-24 text-[#888888]">
             <p className="font-display text-6xl text-[#2a2a2a] mb-4">0</p>
-            <p className="text-sm uppercase tracking-widest">No se encontraron gimnasios con esos filtros.</p>
+            <p className="text-sm uppercase tracking-widest">Nada con esos filtros.</p>
+            <p className="text-xs text-[#666666] mt-2">Prueba a limpiarlos o ampliar la búsqueda.</p>
             <a href="/gimnasios" className="mt-6 inline-block text-xs font-semibold uppercase tracking-widest text-[#d4a017] hover:text-[#e8b520] transition-colors">
               Ver todos los gimnasios →
             </a>

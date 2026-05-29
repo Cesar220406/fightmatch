@@ -1,0 +1,17 @@
+CAPTURAS DE PANTALLA
+--------------------
+Esta carpeta es para las capturas de pantalla de la aplicacion.
+
+Se recomienda incluir capturas de:
+  - Pagina de inicio (/)
+  - Buscador con filtro de lesion activo (/buscar?lesion=1)
+  - Detalle de un gimnasio (/gimnasios/dragon-fight-club-madrid)
+  - Seccion de noticias (/noticias)
+  - Test de personalidad (/test)
+  - Panel de administrador (/admin)
+  - Panel del gimnasio - pestana Miembros (/perfil/gimnasio)
+  - Panel del gimnasio - pestana Clases (/perfil/gimnasio)
+  - Comparativa de artes marciales (/comparar)
+  - Pagina de planes (/suscripcion/planes)
+
+Formato recomendado: PNG, resolucion 1920x1080 o similar.

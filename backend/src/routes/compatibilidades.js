@@ -2,7 +2,7 @@ const router = require('express').Router();
 const pool = require('../db/pool');
 const { auth, requireRol } = require('../middleware/auth');
 
-// GET /api/compatibilidades/all — all entries, admin only
+// todas las compatibilidades, solo para el panel de admin
 router.get('/all', auth, requireRol('admin', 'editor'), async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -21,7 +21,7 @@ router.get('/all', auth, requireRol('admin', 'editor'), async (req, res) => {
   }
 });
 
-// GET /api/compatibilidades?lesiones=1,2,3 — busca artes compatibles con múltiples lesiones
+// devuelve artes marciales compatibles con todas las lesiones que llegan por query
 router.get('/', async (req, res) => {
   const { lesiones } = req.query;
   if (!lesiones) return res.status(400).json({ error: 'Parámetro lesiones requerido' });
@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
   if (!ids.length) return res.status(400).json({ error: 'IDs de lesión inválidos' });
 
   try {
-    // Artes marciales compatibles con TODAS las lesiones indicadas
+    // uso HAVING COUNT = cantidad de lesiones para que sea compatible con TODAS, no solo alguna
     const { rows } = await pool.query(
       `SELECT am.id, am.nombre, am.slug, am.descripcion, am.imagen_url,
               COUNT(c.id) AS lesiones_compatibles
@@ -49,7 +49,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/compatibilidades — crear/actualizar compatibilidad
+// crea o actualiza la compatibilidad (upsert por arte+lesion)
 router.post('/', auth, requireRol('admin', 'editor'), async (req, res) => {
   const { arte_marcial_id, lesion_id, compatible, nivel_recomendado, notas } = req.body;
   try {

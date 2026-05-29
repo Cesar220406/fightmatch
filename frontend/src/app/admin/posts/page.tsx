@@ -5,14 +5,18 @@ import { api } from '@/lib/api';
 import { getToken } from '@/lib/auth';
 import type { Post } from '@/types';
 
+const EMPTY_FORM = {
+  titulo: '', slug: '', resumen: '', contenido: '',
+  imagen_portada: '', estado: 'borrador', etiquetas: '',
+};
+
 export default function AdminPosts() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [form, setForm] = useState({
-    titulo: '', slug: '', resumen: '', contenido: '',
-    imagen_portada: '', estado: 'borrador', etiquetas: '',
-  });
+  const [posts, setPosts]     = useState<Post[]>([]);
+  const [form, setForm]       = useState({ ...EMPTY_FORM });
+  const [editPost, setEditPost] = useState<Post | null>(null);
+  const [editForm, setEditForm] = useState({ ...EMPTY_FORM });
   const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState('');
+  const [msg, setMsg]         = useState('');
 
   useEffect(() => { cargar(); }, []);
 
@@ -28,6 +32,25 @@ export default function AdminPosts() {
   function onChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
     setForm(f => ({ ...f, [name]: value, ...(name === 'titulo' ? { slug: slugify(value) } : {}) }));
+  }
+
+  function onEditChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+    const { name, value } = e.target;
+    setEditForm(f => ({ ...f, [name]: value }));
+  }
+
+  function seleccionarEditar(p: Post) {
+    setEditPost(p);
+    setEditForm({
+      titulo:         p.titulo ?? '',
+      slug:           p.slug ?? '',
+      resumen:        p.resumen ?? '',
+      contenido:      p.contenido ?? '',
+      imagen_portada: p.imagen_portada ?? '',
+      estado:         p.estado ?? 'borrador',
+      etiquetas:      p.etiquetas?.join(', ') ?? '',
+    });
+    setMsg('');
   }
 
   async function eliminar(id: string, titulo: string) {
@@ -47,7 +70,22 @@ export default function AdminPosts() {
       const etiquetas = form.etiquetas.split(',').map(t => t.trim()).filter(Boolean);
       await api.post('/posts', { ...form, etiquetas }, getToken() ?? '');
       setMsg('Post creado correctamente.');
-      setForm({ titulo: '', slug: '', resumen: '', contenido: '', imagen_portada: '', estado: 'borrador', etiquetas: '' });
+      setForm({ ...EMPTY_FORM });
+      cargar();
+    } catch (err: unknown) {
+      setMsg(`Error: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+    } finally { setLoading(false); }
+  }
+
+  async function onEditSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editPost) return;
+    setLoading(true); setMsg('');
+    try {
+      const etiquetas = editForm.etiquetas.split(',').map(t => t.trim()).filter(Boolean);
+      await api.put(`/posts/${editPost.id}`, { ...editForm, etiquetas }, getToken() ?? '');
+      setMsg('Post actualizado correctamente.');
+      setEditPost(null);
       cargar();
     } catch (err: unknown) {
       setMsg(`Error: ${err instanceof Error ? err.message : 'Error desconocido'}`);
@@ -58,6 +96,61 @@ export default function AdminPosts() {
     publicado: 'badge-green', borrador: 'badge-gray', archivado: 'badge-red',
   };
 
+  const formFields = [
+    { name: 'titulo',         label: 'Título *',              type: 'input',    req: true },
+    { name: 'slug',           label: 'Slug',                  type: 'input',    req: true },
+    { name: 'resumen',        label: 'Resumen',               type: 'textarea', rows: 2 },
+    { name: 'imagen_portada', label: 'URL imagen portada',    type: 'input',    ph: 'https://...' },
+    { name: 'etiquetas',      label: 'Etiquetas (coma sep.)', type: 'input',    ph: 'boxeo, lesiones' },
+  ];
+
+  function PostForm({
+    values, onCh, onSubmitFn, submitLabel,
+  }: {
+    values: typeof EMPTY_FORM,
+    onCh: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void,
+    onSubmitFn: (e: React.FormEvent) => void,
+    submitLabel: string,
+  }) {
+    return (
+      <form onSubmit={onSubmitFn} className="space-y-4">
+        {formFields.map(({ name, label, type, req, rows, ph }) => (
+          <div key={name}>
+            <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-2">{label}</label>
+            {type === 'textarea' ? (
+              <textarea name={name} value={(values as Record<string, string>)[name]} onChange={onCh} rows={rows ?? 2} className="input resize-none" />
+            ) : (
+              <input name={name} value={(values as Record<string, string>)[name]} onChange={onCh} required={req} className="input" placeholder={ph} />
+            )}
+          </div>
+        ))}
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-2">Contenido (Markdown) *</label>
+          <textarea name="contenido" value={values.contenido} onChange={onCh} required rows={8} className="input resize-none font-mono text-xs" placeholder="## Título&#10;&#10;Texto del artículo..." />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-2">Estado</label>
+          <select name="estado" value={values.estado} onChange={onCh} className="input bg-[#111111]">
+            <option value="borrador">Borrador</option>
+            <option value="publicado">Publicar ahora</option>
+            <option value="archivado">Archivar</option>
+          </select>
+        </div>
+
+        {msg && (
+          <p className={`text-xs font-semibold uppercase tracking-wider ${msg.startsWith('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
+            {msg}
+          </p>
+        )}
+        <button type="submit" disabled={loading} className="btn-primary w-full">
+          {loading ? 'Guardando...' : submitLabel}
+        </button>
+      </form>
+    );
+  }
+
   return (
     <div className="p-8">
       <div className="mb-8 pb-6" style={{ borderBottom: '1px solid #1a1a1a' }}>
@@ -66,55 +159,37 @@ export default function AdminPosts() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="bg-[#0d0d0d] border border-[#1a1a1a] p-6" style={{ borderLeft: '3px solid #c41e1e' }}>
-          <h2 className="font-display text-xl text-white uppercase tracking-wide mb-5">Nuevo post</h2>
-          <form onSubmit={onSubmit} className="space-y-4">
-            {[
-              { name: 'titulo',         label: 'Título *',              type: 'input',    req: true },
-              { name: 'slug',           label: 'Slug (auto)',           type: 'input',    req: true },
-              { name: 'resumen',        label: 'Resumen',               type: 'textarea', rows: 2 },
-              { name: 'imagen_portada', label: 'URL imagen portada',    type: 'input',    ph: 'https://...' },
-              { name: 'etiquetas',      label: 'Etiquetas (coma sep.)', type: 'input',    ph: 'boxeo, lesiones' },
-            ].map(({ name, label, type, req, rows, ph }) => (
-              <div key={name}>
-                <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-2">{label}</label>
-                {type === 'textarea' ? (
-                  <textarea name={name} value={(form as Record<string, string>)[name]} onChange={onChange} rows={rows ?? 2} className="input resize-none" />
-                ) : (
-                  <input name={name} value={(form as Record<string, string>)[name]} onChange={onChange} required={req} className="input" placeholder={ph} />
-                )}
+        {/* Left: form */}
+        <div>
+          {editPost ? (
+            <div className="bg-[#0d0d0d] border border-[#1a1a1a] p-6" style={{ borderLeft: '3px solid #d4a017' }}>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="font-display text-xl text-white uppercase tracking-wide">
+                  Editar post
+                </h2>
+                <button
+                  onClick={() => { setEditPost(null); setMsg(''); }}
+                  className="text-xs text-[#555555] hover:text-[#888888] uppercase tracking-widest"
+                >
+                  ✕ Cancelar
+                </button>
               </div>
-            ))}
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-2">Contenido (HTML) *</label>
-              <textarea name="contenido" value={form.contenido} onChange={onChange} required rows={6} className="input resize-none font-mono text-xs" placeholder="<p>Texto del artículo...</p>" />
+              <PostForm values={editForm} onCh={onEditChange} onSubmitFn={onEditSubmit} submitLabel="Guardar cambios" />
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-2">Estado</label>
-              <select name="estado" value={form.estado} onChange={onChange} className="input bg-[#111111]">
-                <option value="borrador">Borrador</option>
-                <option value="publicado">Publicar ahora</option>
-              </select>
+          ) : (
+            <div className="bg-[#0d0d0d] border border-[#1a1a1a] p-6" style={{ borderLeft: '3px solid #c41e1e' }}>
+              <h2 className="font-display text-xl text-white uppercase tracking-wide mb-5">Nuevo post</h2>
+              <PostForm values={form} onCh={onChange} onSubmitFn={onSubmit} submitLabel="Crear post" />
             </div>
-
-            {msg && (
-              <p className={`text-xs font-semibold uppercase tracking-wider ${msg.startsWith('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
-                {msg}
-              </p>
-            )}
-            <button type="submit" disabled={loading} className="btn-primary w-full">
-              {loading ? 'Guardando...' : 'Crear post'}
-            </button>
-          </form>
+          )}
         </div>
 
+        {/* Right: list */}
         <div className="bg-[#0d0d0d] border border-[#1a1a1a] p-6" style={{ borderLeft: '3px solid #d4a017' }}>
           <h2 className="font-display text-xl text-white uppercase tracking-wide mb-5">
             Posts <span className="text-[#d4a017]">({posts.length})</span>
           </h2>
-          <div className="space-y-1.5 max-h-[500px] overflow-y-auto">
+          <div className="space-y-1.5 max-h-[600px] overflow-y-auto">
             {posts.map((p, i) => (
               <div
                 key={p.id}
@@ -127,6 +202,13 @@ export default function AdminPosts() {
                 </div>
                 <span className={`${estadoColor[p.estado] ?? 'badge-gray'} mr-2 shrink-0`}>{p.estado}</span>
                 <button
+                  onClick={() => seleccionarEditar(p)}
+                  className="text-xs text-[#d4a017] hover:text-[#e8b520] transition-colors px-2 py-1 uppercase tracking-wider shrink-0"
+                  title="Editar"
+                >
+                  ✎
+                </button>
+                <button
                   onClick={() => eliminar(p.id, p.titulo)}
                   className="text-xs text-[#666666] hover:text-red-400 transition-colors px-2 py-1 uppercase tracking-wider shrink-0"
                 >
@@ -135,7 +217,7 @@ export default function AdminPosts() {
               </div>
             ))}
             {posts.length === 0 && (
-              <p className="text-xs text-[#888888] uppercase tracking-widest py-4">No hay posts publicados.</p>
+              <p className="text-xs text-[#888888] uppercase tracking-widest py-4">No hay posts.</p>
             )}
           </div>
         </div>
