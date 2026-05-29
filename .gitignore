@@ -62,6 +62,9 @@ start_backend.bat
 deploy_v*.py
 write_improvements.py
 
+# Claude Code (metadatos del IDE, no van al repo)
+.claude/
+
 # Archivos temporales
 schema_details.txt
 entrega_schema_dump.txt
