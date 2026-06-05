@@ -325,23 +325,31 @@ CREATE INDEX IF NOT EXISTS usuario_lesiones_usuario_idx  ON usuario_lesiones(usu
 -- SEED DATA - ARTES MARCIALES (8)
 -- ============================================================
 
-INSERT INTO artes_marciales (nombre, slug, descripcion, impacto_fisico) VALUES
+INSERT INTO artes_marciales (nombre, slug, descripcion, impacto_fisico, imagen_url) VALUES
 ('Boxeo',        'boxeo',        'Arte marcial de golpeo con puños. Trabaja coordinación, potencia y cardio.',
- 'Alto impacto en hombros, muñecas y núcleo. Cardio intenso.'),
+ 'Alto impacto en hombros, muñecas y núcleo. Cardio intenso.',
+ 'https://images.unsplash.com/photo-1549476464-37392f717541?w=640&auto=format&fit=crop&q=80'),
 ('Judo',         'judo',         'Arte marcial japonesa basada en proyecciones y derribos.',
- 'Alto impacto en rodillas, caderas y columna lumbar.'),
+ 'Alto impacto en rodillas, caderas y columna lumbar.',
+ 'https://images.unsplash.com/photo-1555597673-b21d5c935865?w=640&auto=format&fit=crop&q=80'),
 ('Yoga Marcial', 'yoga-marcial', 'Fusión de yoga y técnicas marciales de baja intensidad. Muy recomendado para rehabilitación.',
- 'Bajo impacto. Trabaja flexibilidad y equilibrio.'),
+ 'Bajo impacto. Trabaja flexibilidad y equilibrio.',
+ 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=640&auto=format&fit=crop&q=80'),
 ('Tai Chi',      'tai-chi',      'Arte marcial china de movimientos lentos y fluidos. Ideal para todas las edades.',
- 'Mínimo impacto. Adecuado para rehabilitación y mayores.'),
+ 'Mínimo impacto. Adecuado para rehabilitación y mayores.',
+ 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=640&auto=format&fit=crop&q=80'),
 ('BJJ',          'bjj',          'Brazilian Jiu-Jitsu, lucha en suelo con énfasis en sumisiones.',
- 'Moderado-alto. Exige rodillas, caderas y hombros.'),
+ 'Moderado-alto. Exige rodillas, caderas y hombros.',
+ 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=640&auto=format&fit=crop&q=80'),
 ('Muay Thai',    'muay-thai',    'Arte marcial tailandesa de ocho puntos de contacto: puños, codos, rodillas y pies.',
- 'Alto impacto. Rodillas, tobillos y caderas con alta carga.'),
+ 'Alto impacto. Rodillas, tobillos y caderas con alta carga.',
+ 'https://images.unsplash.com/photo-1598971457999-ca4ef48a9a71?w=640&auto=format&fit=crop&q=80'),
 ('Karate',       'karate',       'Arte marcial japonesa de golpeo con manos y pies. Muy popular a nivel federado.',
- 'Moderado. Equilibrio entre impacto y técnica.'),
+ 'Moderado. Equilibrio entre impacto y técnica.',
+ 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=640&auto=format&fit=crop&q=80'),
 ('Taekwondo',    'taekwondo',    'Arte marcial coreana enfocada en patadas. Deporte olímpico desde el año 2000.',
- 'Alto impacto en rodillas y tobillos por las patadas.');
+ 'Alto impacto en rodillas y tobillos por las patadas.',
+ 'https://images.unsplash.com/photo-1574623452334-1e0ac2b3ccb4?w=640&auto=format&fit=crop&q=80');
 
 -- ============================================================
 -- SEED DATA - LESIONES (8)
