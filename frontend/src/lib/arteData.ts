@@ -57,16 +57,21 @@ export const ARTE_SUBTITULO: Record<ArteSlug, string> = {
 
 // IDs de YouTube (vídeo highlight)
 export const ARTE_VIDEO_ID: Record<ArteSlug, string> = {
-  boxeo:      'HiHbPMUCFzk',
-  'muay-thai': 'pZtHpJLFPnY',
-  bjj:        'Ux4VCuPWKpg',
-  judo:       'IY9CRD5TkPA',
-  wrestling:  'zEpHvAWqRqA',
-  mma:        'wcm5zE46rJQ',
-  karate:     '6Sz2rUbBiM4',
-  kickboxing: 'FKH02EQ4oXM',
-  taekwondo:  'cSoq2ZIQSIU',
-  'kung-fu':  'FHtMcHoWd8I',
+  boxeo:       'kD1AEYVlc4k',
+  'muay-thai': 'uLKjxFo43eI',
+  bjj:         'wF7S49bmdmo',
+  judo:        'j2vHtemwDeE',
+  wrestling:   'x06499FKC2g',
+  mma:         '5kxRmDm61Xc',
+  karate:      'qYMn0ItLqDg',
+  kickboxing:  've3uLImtlgc',
+  taekwondo:   'pVTqxx9-_Cg',
+  'kung-fu':   'vNrzQfxBxE8',
+};
+
+// videos para artes fuera del tipo principal
+export const ARTE_VIDEO_EXTRA: Record<string, string> = {
+  'tai-chi': 'y_Zu4_fMBho',
 };
 
 // Pills del hero

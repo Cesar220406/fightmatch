@@ -21,7 +21,7 @@ import type { Metadata }  from 'next';
 import { api }              from '@/lib/api';
 import { hasMuscleData, getMuscleData } from '@/lib/muscleData';
 import {
-  ARTE_NOMBRES, ARTE_CATEGORIA, ARTE_SUBTITULO, ARTE_VIDEO_ID,
+  ARTE_NOMBRES, ARTE_CATEGORIA, ARTE_SUBTITULO, ARTE_VIDEO_ID, ARTE_VIDEO_EXTRA,
   ARTE_ORIGEN, ARTE_TIEMPO_COMPETICION, ARTE_CALLE, ARTE_CONTACTO_NIVEL,
   ARTE_STATS, ARTE_TEXTOS, ARTE_FAQ, ARTE_PATRON, ARTE_CTA_TEXT,
   ARTES_SLUGS, STATS_LABELS,
@@ -141,7 +141,7 @@ export default async function ArteDetallePage(
   const nombre     = ARTE_NOMBRES[s]     ?? arte?.nombre     ?? params.slug;
   const categoria  = ARTE_CATEGORIA[s]   ?? 'Arte Marcial';
   const subtitulo  = ARTE_SUBTITULO[s]   ?? arte?.descripcion ?? '';
-  const videoId    = ARTE_VIDEO_ID[s];
+  const videoId    = ARTE_VIDEO_ID[s] ?? ARTE_VIDEO_EXTRA[params.slug];
   const textos     = ARTE_TEXTOS[s];
   const faq        = ARTE_FAQ[s]         ?? [];
   const stats      = ARTE_STATS[s];
