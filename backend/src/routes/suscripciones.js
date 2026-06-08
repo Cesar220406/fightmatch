@@ -116,6 +116,49 @@ router.put('/:id', auth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// POST /suscripciones/por-email — gym owner añade un miembro buscando por email
+router.post('/por-email', auth, requireRol('gimnasio', 'admin'), async (req, res) => {
+  const { email, plan_id } = req.body;
+  if (!email || !plan_id) return res.status(400).json({ error: 'Faltan email y plan_id' });
+  try {
+    const gymRes = await pool.query('SELECT id FROM gimnasios WHERE propietario_id=$1', [req.user.id]);
+    if (!gymRes.rows.length) return res.status(404).json({ error: 'Sin gimnasio' });
+    const gymId = gymRes.rows[0].id;
+
+    // buscar el usuario por email
+    const userRes = await pool.query('SELECT id, nombre FROM usuarios WHERE email=$1 AND activo=TRUE', [email.trim()]);
+    if (!userRes.rows.length) return res.status(404).json({ error: 'No existe ningún usuario con ese email' });
+    const usuario = userRes.rows[0];
+
+    // comprobar que no tiene ya una suscripción activa en este gimnasio
+    const existing = await pool.query(
+      "SELECT id FROM suscripciones WHERE usuario_id=$1 AND gimnasio_id=$2 AND estado='activa'",
+      [usuario.id, gymId]
+    );
+    if (existing.rows.length) return res.status(409).json({ error: `${usuario.nombre} ya tiene una suscripción activa aquí` });
+
+    const planRes = await pool.query('SELECT * FROM planes WHERE id=$1 AND activo=TRUE', [plan_id]);
+    if (!planRes.rows.length) return res.status(404).json({ error: 'Plan no encontrado' });
+    const plan = planRes.rows[0];
+
+    const ff = new Date(); ff.setMonth(ff.getMonth() + 1);
+    const sus = await pool.query(
+      `INSERT INTO suscripciones (usuario_id,gimnasio_id,plan_id,estado,fecha_inicio,fecha_fin,precio_pagado)
+       VALUES ($1,$2,$3,'activa',CURRENT_DATE,$4,$5) RETURNING *`,
+      [usuario.id, gymId, plan_id, ff.toISOString().split('T')[0], plan.precio]
+    );
+    await pool.query(
+      "INSERT INTO pagos (suscripcion_id,importe,estado,concepto) VALUES ($1,$2,'pagado',$3)",
+      [sus.rows[0].id, plan.precio, `Alta manual por gimnasio — Plan ${plan.nombre}`]
+    );
+    await pool.query(
+      "INSERT INTO notificaciones (usuario_id,tipo,titulo,mensaje) VALUES ($1,'suscripcion_nueva',$2,$3)",
+      [usuario.id, '¡Te han añadido a un gimnasio!', `El gimnasio te ha dado de alta en el plan ${plan.nombre}.`]
+    );
+    res.status(201).json({ ...sus.rows[0], nombre: usuario.nombre });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // PUT /suscripciones/:id/admin — gym owner
 router.put('/:id/admin', auth, requireRol('gimnasio','admin'), async (req, res) => {
   const { estado } = req.body;

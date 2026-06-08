@@ -40,7 +40,12 @@ const ESTADO_COLORS: Record<string,string> = {
   activa:'#52b788', pausada:'#d4a017', cancelada:'#c41e1e', vencida:'#555555',
 };
 
-type Tab = 'gimnasio'|'artes'|'miembros'|'clases'|'estadisticas'|'mensajes';
+type Tab = 'gimnasio'|'artes'|'miembros'|'clases'|'equipo'|'estadisticas'|'mensajes';
+
+interface Trabajador {
+  id: string; nombre: string; apellidos: string;
+  email: string; rol_equipo: string;
+}
 
 const CLASE_EMPTY = {
   nombre:'', instructor:'', arte_marcial:'',
@@ -62,6 +67,9 @@ export default function PerfilGimnasioPage() {
   const [tab, setTab]             = useState<Tab>('gimnasio');
   const [loading, setLoading]     = useState(false);
   const [sinGym, setSinGym]       = useState(false);
+  const [equipo, setEquipo]       = useState<Trabajador[]>([]);
+  const [emailEquipo, setEmailEquipo] = useState('');
+  const [rolEquipo, setRolEquipo] = useState('entrenador');
 
   // Filtros miembros
   const [busqMiembro, setBusqMiembro] = useState('');
@@ -114,6 +122,10 @@ export default function PerfilGimnasioPage() {
       api.get<Estadisticas>('/suscripciones/stats', token)
         .then(setStats).catch(() => toast.error('Error al cargar estadísticas'));
     }
+    if (tab === 'equipo' && equipo.length === 0) {
+      api.get<Trabajador[]>('/gimnasios/mio/equipo', token)
+        .then(setEquipo).catch(() => {});
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
@@ -144,6 +156,31 @@ export default function PerfilGimnasioPage() {
       toast.success('Artes actualizadas');
     } catch { toast.error('Error'); }
     finally { setLoading(false); }
+  }
+
+  async function añadirTrabajador(e: React.FormEvent) {
+    e.preventDefault();
+    if (!emailEquipo.trim()) return;
+    const token = localStorage.getItem('token') ?? '';
+    setLoading(true);
+    try {
+      const nuevo = await api.post<Trabajador>('/gimnasios/mio/equipo',
+        { email: emailEquipo.trim(), rol_equipo: rolEquipo }, token);
+      setEquipo(prev => [...prev, nuevo]);
+      setEmailEquipo('');
+      toast.success('Trabajador añadido');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error al añadir');
+    } finally { setLoading(false); }
+  }
+
+  async function eliminarTrabajador(userId: string) {
+    const token = localStorage.getItem('token') ?? '';
+    try {
+      await api.delete(`/gimnasios/mio/equipo/${userId}`, token);
+      setEquipo(prev => prev.filter(t => t.id !== userId));
+      toast.success('Trabajador eliminado');
+    } catch { toast.error('Error al eliminar'); }
   }
 
   async function cambiarEstadoMiembro(id: string, estado: string) {
@@ -227,6 +264,7 @@ export default function PerfilGimnasioPage() {
     { key: 'artes',        label: 'Artes' },
     { key: 'miembros',     label: 'Miembros', badge: miembros.filter(m => m.estado === 'activa').length || undefined },
     { key: 'clases',       label: 'Clases' },
+    { key: 'equipo',       label: 'Equipo' },
     { key: 'estadisticas', label: 'Estadísticas' },
     { key: 'mensajes',     label: 'Mensajes', badge: unreadCount || undefined },
   ];
@@ -542,6 +580,63 @@ export default function PerfilGimnasioPage() {
                 No hay clases todavía. Crea la primera.
               </p>
             )}
+          </div>
+        )}
+
+        {/* ── Equipo ── */}
+        {tab === 'equipo' && (
+          <div className="space-y-6">
+            <div className="card">
+              <h2 className="font-display text-2xl text-white uppercase tracking-wide mb-6">Añadir trabajador</h2>
+              <form onSubmit={añadirTrabajador} className="flex flex-wrap gap-3 items-end">
+                <div className="flex-1 min-w-48">
+                  <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-2">Email del usuario</label>
+                  <input type="email" value={emailEquipo} onChange={e => setEmailEquipo(e.target.value)}
+                    placeholder="usuario@ejemplo.com" className="input" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-widest text-[#888888] mb-2">Rol</label>
+                  <select value={rolEquipo} onChange={e => setRolEquipo(e.target.value)} className="input">
+                    <option value="entrenador">Entrenador</option>
+                    <option value="recepcionista">Recepcionista</option>
+                    <option value="monitor">Monitor</option>
+                    <option value="director">Director</option>
+                  </select>
+                </div>
+                <button type="submit" disabled={loading} className="btn-primary">
+                  {loading ? 'Añadiendo...' : 'Añadir'}
+                </button>
+              </form>
+            </div>
+            <div className="card">
+              <h2 className="font-display text-2xl text-white uppercase tracking-wide mb-6">
+                Equipo <span className="text-base font-sans font-normal text-[#555555] normal-case tracking-normal ml-2">{equipo.length} {equipo.length === 1 ? 'persona' : 'personas'}</span>
+              </h2>
+              {equipo.length === 0 ? (
+                <p className="text-sm text-[#888888] uppercase tracking-widest py-8 text-center">No hay trabajadores añadidos.</p>
+              ) : (
+                <div className="space-y-3">
+                  {equipo.map(t => (
+                    <div key={t.id} className="flex items-center justify-between gap-4 p-4 border border-[#2a2a2a]">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center shrink-0">
+                          <span className="text-sm font-bold text-[#555555] uppercase">{t.nombre[0]}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-[#f0f0f0] text-sm">{t.nombre} {t.apellidos}</p>
+                          <p className="text-xs text-[#555555]">{t.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest border border-[#d4a017]/30 text-[#d4a017]">{t.rol_equipo}</span>
+                        <button onClick={() => eliminarTrabajador(t.id)}
+                          className="text-xs text-[#555555] hover:text-[#c41e1e] uppercase tracking-wider transition-colors">Quitar</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

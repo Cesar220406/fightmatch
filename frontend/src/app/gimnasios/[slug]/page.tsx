@@ -203,6 +203,12 @@ export default async function GimnasioDetallePage({ params }: { params: { slug: 
                 )}
               </div>
 
+              <Link
+                href={`/suscripcion/nueva/${g.slug}`}
+                className="btn-primary block text-center mb-3"
+              >
+                Suscribirse →
+              </Link>
               <ContactarModal gimnasioId={g.id} gimnasioNombre={g.nombre} />
               <div className="mt-3 flex items-center justify-center gap-2 text-xs text-[#888888] uppercase tracking-widest">
                 <FavoritoBtn gimnasioId={g.id} />
