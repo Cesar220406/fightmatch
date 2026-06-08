@@ -50,18 +50,14 @@ router.post('/', auth, async (req, res) => {
       [req.params.id, req.user.id, p, comentario?.trim() || null]
     );
 
-    // Actualizar valoración media en la tabla gimnasios
-    await pool.query(
-      `UPDATE gimnasios
-       SET valoracion_media = (
-         SELECT ROUND(AVG(puntuacion)::numeric, 1)
-         FROM reviews WHERE gimnasio_id = $1
-       )
-       WHERE id = $1`,
-      [req.params.id]
+    // devolver también el nombre del usuario para mostrarlo al instante
+    const full = await pool.query(
+      `SELECT r.id, r.puntuacion, r.comentario, r.created_at, u.nombre
+       FROM reviews r JOIN usuarios u ON u.id = r.usuario_id
+       WHERE r.id = $1`,
+      [rows[0].id]
     );
-
-    res.status(201).json(rows[0]);
+    res.status(201).json(full.rows[0]);
   } catch (err) {
     console.error('[reviews POST]', err.message);
     res.status(500).json({ error: 'Error interno' });
