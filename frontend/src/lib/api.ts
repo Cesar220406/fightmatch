@@ -9,6 +9,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const { headers: optHeaders, ...restOptions } = options;
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { 'Content-Type': 'application/json', ...(optHeaders as Record<string, string>) },
+    cache: 'no-store',   // evita que Next.js cachee las respuestas del backend
     ...restOptions,
   });
   if (!res.ok) {
